@@ -1,80 +1,101 @@
-use relm::{Widget};
-use gtk::prelude::*;
-use gtk::{Inhibit, Orientation::Vertical};
-use relm_derive::Msg;
-use relm_derive::widget;
+use gtk::{
+    Inhibit,
+    LabelExt,
+    OrientableExt,
+    WidgetExt,
+};
+use gtk::Orientation::{Horizontal, Vertical};
+use relm::{Component, ContainerWidget, Widget};
+use relm_derive::{Msg, widget};
 use dbus::blocking::Connection;
-mod mconnect_dbus;
 use std::time::Duration;
+
+use self::Msg::*;
+mod mconnect_dbus;
+
+pub struct DeviceListItemModel {
+    device: dbus::Path<'static>
+}
+
+#[derive(Msg)]
+pub enum DeviceListItemMsg {
+    
+}
+
+#[widget]
+impl Widget for DeviceListItem {
+    fn model(device: dbus::Path<'static>) -> DeviceListItemModel {
+        DeviceListItemModel {
+            device: device
+        }
+    }
+
+    fn update(&mut self, event: DeviceListItemMsg) {
+        match event {
+
+        }
+    }
+
+    view! {
+        gtk::Box {
+            orientation: Vertical,
+            gtk::Label {
+                label: "0",
+                widget_name: "label",
+                text: &self.model.device.to_string(),
+            }
+        }
+    }
+}
 
 #[derive(Msg)]
 pub enum Msg {
-    Decrement,
-    Increment,
-    Quit,
+    Quit
 }
 
 pub struct Model {
-    counter: u32,
+    device_list_items: Vec<Component<DeviceListItem>>,
 }
 
 #[widget]
 impl Widget for Win {
     fn model() -> Model {
         Model {
-            counter: 0,
+            device_list_items: vec![],
         }
     }
 
     fn update(&mut self, event: Msg) {
         match event {
-            // A call to self.label1.set_text() is automatically inserted by the
-            // attribute every time the model.counter attribute is updated.
-            Msg::Decrement => self.model.counter -= 1,
-            Msg::Increment => self.model.counter += 1,
-            Msg::Quit => gtk::main_quit(),
+            Quit => gtk::main_quit()
         }
+    }
+
+    fn init_view(&mut self){
+        let c = Connection::new_session().unwrap();
+        let p = c.with_proxy("org.mconnect", "/org/mconnect/manager", Duration::new(5, 0));
+        use mconnect_dbus::OrgMconnectDeviceManager;
+        p.list_devices().unwrap().iter().for_each(|device|{
+            let widget = self.hbox.add_widget::<DeviceListItem>(device.clone());
+            //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
+            self.model.device_list_items.push(widget.clone());
+        });
     }
 
     view! {
         gtk::Window {
             gtk::Box {
                 orientation: Vertical,
-                gtk::Button {
-                    // By default, an event with one paramater is assumed.
-                    clicked => Msg::Increment,
-                    // Hence, the previous line is equivalent to:
-                    // clicked(_) => Increment,
-                    label: "+",
-                },
-                gtk::Label {
-                    // Bind the text property of this Label to the counter attribute
-                    // of the model.
-                    // Every time the counter attribute is updated, the text property
-                    // will be updated too.
-                    text: &self.model.counter.to_string(),
-                },
-                gtk::Button {
-                    clicked => Msg::Decrement,
-                    label: "-",
-                },
+                #[name="hbox"]
+                gtk::Box {
+                    orientation: Horizontal,
+                }
             },
-            // Use a tuple when you want to both send a message and return a value to
-            // the GTK+ callback.
-            delete_event(_, _) => (Msg::Quit, Inhibit(false)),
+            delete_event(_, _) => (Quit, Inhibit(false)),
         }
     }
 }
 
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    // Win::run(()).unwrap();
-    let c = Connection::new_session()?;
-    let p = c.with_proxy("org.mconnect", "/org/mconnect/manager", Duration::new(5, 0));
-    use mconnect_dbus::OrgMconnectDeviceManager;
-    let devices:Result<Vec<dbus::Path<'static>>, dbus::Error> = p.list_devices();
-    if let Ok(devices) = devices {
-        devices.iter().for_each(|device| println!("{}", device.to_string()));
-    }
-    // println!("{:#?}", devices);
-    Ok(())
+fn main() {
+    Win::run(()).expect("Win::run failed");
 }
