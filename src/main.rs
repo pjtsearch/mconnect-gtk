@@ -10,6 +10,7 @@ use relm::{Component, ContainerWidget, Widget};
 use relm_derive::{Msg, widget};
 use dbus::blocking::Connection;
 use std::time::Duration;
+use mconnect_dbus::OrgMconnectDeviceManager;
 
 use self::Msg::*;
 mod mconnect_dbus;
@@ -74,13 +75,11 @@ impl Widget for Win {
     }
 
     fn init_view(&mut self){
-        ConnUtil::create_conn(ConnVariant::DeviceManager, move |p| {
-            use mconnect_dbus::OrgMconnectDeviceManager;
-            p.list_devices().unwrap().iter().for_each(|device|{
-                let widget = self.hbox.add_widget::<DeviceListItem>(device.clone());
-                //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.push(widget.clone());
-            });
+        let devices = ConnUtil::create_conn(ConnVariant::DeviceManager, |p| p.list_devices().unwrap());
+        devices.iter().for_each(|device|{
+            let widget = self.devices_list.add_widget::<DeviceListItem>(device.clone());
+            //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
+            self.model.device_list_items.push(widget.clone());
         });
     }
 
@@ -88,9 +87,9 @@ impl Widget for Win {
         gtk::Window {
             gtk::Box {
                 orientation: Vertical,
-                #[name="hbox"]
+                #[name="devices_list"]
                 gtk::Box {
-                    orientation: Horizontal,
+                    orientation: Vertical,
                 }
             },
             delete_event(_, _) => (Quit, Inhibit(false)),

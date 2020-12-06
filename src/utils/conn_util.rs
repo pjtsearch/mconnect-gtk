@@ -7,8 +7,8 @@ pub enum ConnVariant {
 pub struct ConnUtil;
 
 impl ConnUtil {
-    pub fn create_conn<F>(variant:ConnVariant, mut action: F) 
-        where F: FnMut(dbus::blocking::Proxy<'_, &dbus::blocking::Connection>) -> () {
+    pub fn create_conn<F, R>(variant:ConnVariant, action: F) -> R
+        where F: Fn(dbus::blocking::Proxy<'_, &dbus::blocking::Connection>) -> R {
         let c = dbus::blocking::Connection::new_session().unwrap();
         match variant {
             ConnVariant::DeviceManager => 
