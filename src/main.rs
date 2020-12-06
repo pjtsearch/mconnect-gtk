@@ -1,5 +1,8 @@
-use crate::mconnect_dbus::OrgFreedesktopDBusProperties;
-use crate::utils::conn_util::{with_conn, ConnVariant::*};
+use crate::utils::device::Device;
+use mconnect_dbus::OrgFreedesktopDBusProperties;
+use utils::conn_util::{with_conn, ConnVariant::*};
+#[macro_use]
+extern crate derive_builder;
 use gtk::{
     Inhibit,
     LabelExt,
@@ -10,13 +13,14 @@ use gtk::Orientation::Vertical;
 use relm::{Component, ContainerWidget, Widget};
 use relm_derive::{Msg, widget};
 use mconnect_dbus::OrgMconnectDeviceManager;
+use utils::device::DeviceBuilder;
 
 use self::Msg::*;
 mod mconnect_dbus;
 mod utils;
 
 pub struct DeviceListItemModel {
-    device: String
+    device: Device
 }
 
 #[derive(Msg)]
@@ -26,7 +30,7 @@ pub enum DeviceListItemMsg {
 
 #[widget]
 impl Widget for DeviceListItem {
-    fn model(device: String) -> DeviceListItemModel {
+    fn model(device: Device) -> DeviceListItemModel {
         DeviceListItemModel {
             device: device
         }
@@ -42,9 +46,9 @@ impl Widget for DeviceListItem {
         gtk::Box {
             orientation: Vertical,
             gtk::Label {
-                label: &self.model.device,
+                label: &self.model.device.name,
                 widget_name: "label",
-                text: &self.model.device,
+                text: &self.model.device.name,
             }
         }
     }
@@ -76,10 +80,10 @@ impl Widget for Win {
     fn init_view(&mut self){
         with_conn(DeviceManager, |p| p.list_devices().unwrap())
             .iter()
-            .map(|path|
-                    with_conn(Device(path), |p| p.get::<String>("org.mconnect.Device", "Name")))
+            .map(|path| with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap())
+            .map(|map| DeviceBuilder::default().from_map(map).build().unwrap())
             .for_each(|device|{
-                let widget = self.devices_list.add_widget::<DeviceListItem>(device.unwrap());
+                let widget = self.devices_list.add_widget::<DeviceListItem>(device);
                 //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
                 self.model.device_list_items.push(widget.clone());
             });
