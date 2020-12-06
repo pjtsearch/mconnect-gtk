@@ -1,3 +1,4 @@
+use crate::utils::conn_util::{ConnUtil, ConnVariant};
 use gtk::{
     Inhibit,
     LabelExt,
@@ -12,6 +13,7 @@ use std::time::Duration;
 
 use self::Msg::*;
 mod mconnect_dbus;
+mod utils;
 
 pub struct DeviceListItemModel {
     device: dbus::Path<'static>
@@ -40,7 +42,7 @@ impl Widget for DeviceListItem {
         gtk::Box {
             orientation: Vertical,
             gtk::Label {
-                label: "0",
+                label: &self.model.device.to_string(),
                 widget_name: "label",
                 text: &self.model.device.to_string(),
             }
@@ -72,13 +74,13 @@ impl Widget for Win {
     }
 
     fn init_view(&mut self){
-        let c = Connection::new_session().unwrap();
-        let p = c.with_proxy("org.mconnect", "/org/mconnect/manager", Duration::new(5, 0));
-        use mconnect_dbus::OrgMconnectDeviceManager;
-        p.list_devices().unwrap().iter().for_each(|device|{
-            let widget = self.hbox.add_widget::<DeviceListItem>(device.clone());
-            //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-            self.model.device_list_items.push(widget.clone());
+        ConnUtil::create_conn(ConnVariant::DeviceManager, move |p| {
+            use mconnect_dbus::OrgMconnectDeviceManager;
+            p.list_devices().unwrap().iter().for_each(|device|{
+                let widget = self.hbox.add_widget::<DeviceListItem>(device.clone());
+                //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
+                self.model.device_list_items.push(widget.clone());
+            });
         });
     }
 
