@@ -1,5 +1,5 @@
 use crate::mconnect_dbus::OrgFreedesktopDBusProperties;
-use crate::utils::conn_util::{ConnUtil, ConnVariant};
+use crate::utils::conn_util::{with_conn, ConnVariant::*};
 use gtk::{
     Inhibit,
     LabelExt,
@@ -74,11 +74,10 @@ impl Widget for Win {
     }
 
     fn init_view(&mut self){
-        ConnUtil::with_conn(ConnVariant::DeviceManager, |p| p.list_devices().unwrap())
+        with_conn(DeviceManager, |p| p.list_devices().unwrap())
             .iter()
             .map(|path|
-                    ConnUtil::with_conn(ConnVariant::Device(path),
-                        |p| p.get::<String>("org.mconnect.Device", "Name")))
+                    with_conn(Device(path), |p| p.get::<String>("org.mconnect.Device", "Name")))
             .for_each(|device|{
                 let widget = self.devices_list.add_widget::<DeviceListItem>(device.unwrap());
                 //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
