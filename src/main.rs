@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use relm::Update;
 use crate::utils::device::Device;
 use mconnect_dbus::OrgFreedesktopDBusProperties;
@@ -63,14 +64,14 @@ pub enum Msg {
 }
 
 pub struct Model {
-    device_list_items: Vec<(String, Component<DeviceListItem>)>,
+    device_list_items: HashMap<String, Component<DeviceListItem>>,
 }
 
 #[widget]
 impl Widget for Win {
     fn model() -> Model {
         Model {
-            device_list_items: vec![],
+            device_list_items: HashMap::default(),
         }
     }
 
@@ -80,12 +81,10 @@ impl Widget for Win {
             AddDevice(path, device) => {
                 let widget = self.devices_list.add_widget::<DeviceListItem>(device);
                 //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.push((path, widget.clone()));
+                self.model.device_list_items.insert(path, widget.clone());
             },
-            RemoveDevice(path) => {
-               self.devices_list.remove_widget(
-                    self.model.device_list_items.iter().find(move |(d_path,_)| d_path.to_owned() == path).unwrap().1.clone());
-            }
+            RemoveDevice(path) => self.devices_list.remove_widget(
+                                    self.model.device_list_items.get(&path).unwrap().clone())
         }
     }
 
