@@ -1,3 +1,4 @@
+use relm::Update;
 use crate::utils::device::Device;
 use mconnect_dbus::OrgFreedesktopDBusProperties;
 use utils::conn_util::{with_conn, ConnVariant::*};
@@ -56,7 +57,8 @@ impl Widget for DeviceListItem {
 
 #[derive(Msg)]
 pub enum Msg {
-    Quit
+    Quit,
+    AddDevice(Device)
 }
 
 pub struct Model {
@@ -73,7 +75,12 @@ impl Widget for Win {
 
     fn update(&mut self, event: Msg) {
         match event {
-            Quit => gtk::main_quit()
+            Quit => gtk::main_quit(),
+            AddDevice(device) => {
+                let widget = self.devices_list.add_widget::<DeviceListItem>(device);
+                //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
+                self.model.device_list_items.push(widget.clone());
+            }
         }
     }
 
@@ -83,9 +90,7 @@ impl Widget for Win {
             .map(|path| with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap())
             .map(|map| DeviceBuilder::default().from_map(map).build().unwrap())
             .for_each(|device|{
-                let widget = self.devices_list.add_widget::<DeviceListItem>(device);
-                //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.push(widget.clone());
+                self.update(AddDevice(device))
             });
     }
 
