@@ -58,11 +58,12 @@ impl Widget for DeviceListItem {
 #[derive(Msg)]
 pub enum Msg {
     Quit,
-    AddDevice(Device)
+    AddDevice(String, Device),
+    RemoveDevice(String),
 }
 
 pub struct Model {
-    device_list_items: Vec<Component<DeviceListItem>>,
+    device_list_items: Vec<(String, Component<DeviceListItem>)>,
 }
 
 #[widget]
@@ -76,10 +77,14 @@ impl Widget for Win {
     fn update(&mut self, event: Msg) {
         match event {
             Quit => gtk::main_quit(),
-            AddDevice(device) => {
+            AddDevice(path, device) => {
                 let widget = self.devices_list.add_widget::<DeviceListItem>(device);
                 //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.push(widget.clone());
+                self.model.device_list_items.push((path, widget.clone()));
+            },
+            RemoveDevice(path) => {
+               self.devices_list.remove_widget(
+                    self.model.device_list_items.iter().find(move |(d_path,_)| d_path.to_owned() == path).unwrap().1.clone());
             }
         }
     }
@@ -87,10 +92,10 @@ impl Widget for Win {
     fn init_view(&mut self){
         with_conn(DeviceManager, |p| p.list_devices().unwrap())
             .iter()
-            .map(|path| with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap())
-            .map(|map| DeviceBuilder::default().from_map(map).build().unwrap())
-            .for_each(|device|{
-                self.update(AddDevice(device))
+            .map(|path| (path.to_string(), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
+            .map(|(path, map)| (path, DeviceBuilder::default().from_map(map).build().unwrap()))
+            .for_each(|(path, device)|{
+                self.update(AddDevice(path, device))
             });
     }
 
