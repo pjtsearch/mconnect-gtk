@@ -1,3 +1,8 @@
+use gtk::Orientation::Horizontal;
+use crate::mconnect_dbus::OrgMconnectDeviceManagerDeviceRemoved;
+use dbus::Message;
+use dbus::blocking::Connection;
+use crate::mconnect_dbus::OrgMconnectDeviceManagerDeviceAdded;
 use std::collections::HashMap;
 use relm::Update;
 use crate::utils::device::Device;
@@ -47,11 +52,22 @@ impl Widget for DeviceListItem {
     view! {
         gtk::Box {
             orientation: Vertical,
-            gtk::Label {
-                label: &self.model.device.name,
-                widget_name: "label",
-                text: &self.model.device.name,
-            }
+            gtk::ListBoxRow {
+                gtk::Box {
+                    orientation: Horizontal,
+                    gtk::Label {
+                        label: &self.model.device.name,
+                        widget_name: "label",
+                        text: &self.model.device.name,
+                    },
+                    gtk::Label {
+                        label: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
+                        widget_name: "label",
+                        text: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
+                    },
+                }
+            },
+            gtk::Separator {}
         }
     }
 }
@@ -96,6 +112,10 @@ impl Widget for Win {
             .for_each(|(path, device)|{
                 self.update(AddDevice(path, device))
             });
+        with_conn(DeviceManager, |p| p.match_signal(|h: OrgMconnectDeviceManagerDeviceRemoved, _: &Connection, _: &Message| {
+            RemoveDevice(h.path);
+            true
+        })).unwrap();
     }
 
     view! {
@@ -103,8 +123,8 @@ impl Widget for Win {
             gtk::Box {
                 orientation: Vertical,
                 #[name="devices_list"]
-                gtk::Box {
-                    orientation: Vertical,
+                gtk::ListBox {
+                    
                 }
             },
             delete_event(_, _) => (Quit, Inhibit(false)),
