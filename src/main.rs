@@ -1,137 +1,23 @@
-use gtk::Orientation::Horizontal;
-use crate::mconnect_dbus::OrgMconnectDeviceManagerDeviceRemoved;
-use dbus::Message;
-use dbus::blocking::Connection;
-use crate::mconnect_dbus::OrgMconnectDeviceManagerDeviceAdded;
-use std::collections::HashMap;
-use relm::Update;
-use crate::utils::device::Device;
-use mconnect_dbus::OrgFreedesktopDBusProperties;
-use utils::conn_util::{with_conn, ConnVariant::*};
-#[macro_use]
-extern crate derive_builder;
-use gtk::{
-    Inhibit,
-    LabelExt,
-    OrientableExt,
-    WidgetExt,
-};
-use gtk::Orientation::Vertical;
-use relm::{Component, ContainerWidget, Widget};
-use relm_derive::{Msg, widget};
-use mconnect_dbus::OrgMconnectDeviceManager;
-use utils::device::DeviceBuilder;
+use std::env::args;
+use gtk::prelude::*;
+use gio::prelude::*;
 
-use self::Msg::*;
-mod mconnect_dbus;
-mod utils;
+pub fn main() {
+    let application = gtk::Application::new(
+        Some("com.pjtsearch.mconnect-gtk"),
+        gio::ApplicationFlags::empty(),
+    )
+    .expect("Initialization failed...");
 
-pub struct DeviceListItemModel {
-    device: Device
-}
+    application.connect_activate(|app| {
+        let glade_src = include_str!("main_window.glade");
+        let builder = gtk::Builder::from_string(glade_src);
 
-#[derive(Msg)]
-pub enum DeviceListItemMsg {
-    
-}
+        let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
+        window.set_application(Some(app));
 
-#[widget]
-impl Widget for DeviceListItem {
-    fn model(device: Device) -> DeviceListItemModel {
-        DeviceListItemModel {
-            device: device
-        }
-    }
+        window.show_all();
+    });
 
-    fn update(&mut self, event: DeviceListItemMsg) {
-        match event {
-
-        }
-    }
-
-    view! {
-        gtk::Box {
-            orientation: Vertical,
-            gtk::ListBoxRow {
-                gtk::Box {
-                    orientation: Horizontal,
-                    gtk::Label {
-                        label: &self.model.device.name,
-                        widget_name: "label",
-                        text: &self.model.device.name,
-                    },
-                    gtk::Label {
-                        label: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
-                        widget_name: "label",
-                        text: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
-                    },
-                }
-            },
-            gtk::Separator {}
-        }
-    }
-}
-
-#[derive(Msg)]
-pub enum Msg {
-    Quit,
-    AddDevice(String, Device),
-    RemoveDevice(String),
-}
-
-pub struct Model {
-    device_list_items: HashMap<String, Component<DeviceListItem>>,
-}
-
-#[widget]
-impl Widget for Win {
-    fn model() -> Model {
-        Model {
-            device_list_items: HashMap::default(),
-        }
-    }
-
-    fn update(&mut self, event: Msg) {
-        match event {
-            Quit => gtk::main_quit(),
-            AddDevice(path, device) => {
-                let widget = self.devices_list.add_widget::<DeviceListItem>(device);
-                //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.insert(path, widget.clone());
-            },
-            RemoveDevice(path) => self.devices_list.remove_widget(
-                                    self.model.device_list_items.get(&path).unwrap().clone())
-        }
-    }
-
-    fn init_view(&mut self){
-        with_conn(DeviceManager, |p| p.list_devices().unwrap())
-            .iter()
-            .map(|path| (path.to_string(), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
-            .map(|(path, map)| (path, DeviceBuilder::default().from_map(map).build().unwrap()))
-            .for_each(|(path, device)|{
-                self.update(AddDevice(path, device))
-            });
-        with_conn(DeviceManager, |p| p.match_signal(|h: OrgMconnectDeviceManagerDeviceRemoved, _: &Connection, _: &Message| {
-            RemoveDevice(h.path);
-            true
-        })).unwrap();
-    }
-
-    view! {
-        gtk::Window {
-            gtk::Box {
-                orientation: Vertical,
-                #[name="devices_list"]
-                gtk::ListBox {
-                    
-                }
-            },
-            delete_event(_, _) => (Quit, Inhibit(false)),
-        }
-    }
-}
-
-fn main() {
-    Win::run(()).expect("Win::run failed");
+    application.run(&args().collect::<Vec<_>>());
 }
