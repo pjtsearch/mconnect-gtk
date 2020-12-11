@@ -1,3 +1,4 @@
+use gtk::ListBoxRow;
 use dbus::Message;
 use dbus::blocking::Connection;
 use crate::utils::conn_util::{with_conn, ConnVariant::*};
@@ -5,10 +6,11 @@ use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::devices_list_item::DevicesListItem;
 use std::collections::HashMap;
 use relm_derive::{Msg, widget};
-use relm::{Component, ContainerWidget, Widget};
+use relm::{ContainerWidget, Widget};
 use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties, OrgMconnectDeviceManagerDeviceRemoved};
 use relm::Update;
 use std::path::PathBuf;
+use gtk::prelude::*;
 use self::Msg::*;
 
 mod devices_list_item;
@@ -16,11 +18,12 @@ mod devices_list_item;
 #[derive(Msg)]
 pub enum Msg {
     AddDevice(PathBuf, Device),
-    RemoveDevice(PathBuf)
+    RemoveDevice(PathBuf),
+    RowSelected(Option<ListBoxRow>)
 }
 
 pub struct Model {
-    device_list_items: HashMap<PathBuf, Component<DevicesListItem>>,
+    device_list_items: HashMap<PathBuf, ListBoxRow>,
 }
 
 #[widget]
@@ -36,10 +39,16 @@ impl Widget for DevicesList {
             AddDevice(path, device) => {
                 let widget = self.devices_list.add_widget::<DevicesListItem>(device);
                 //HACK: need to store relm widget so that updates work. See https://github.com/antoyo/relm/issues/50#issuecomment-314931446
-                self.model.device_list_items.insert(path, widget.clone());
+                self.model.device_list_items.insert(path, widget.widget().clone());
             },
-            RemoveDevice(path) => self.devices_list.remove_widget(
-                                    self.model.device_list_items.get(&path).unwrap().clone())
+            RemoveDevice(path) => self.devices_list.remove(
+                                    self.model.device_list_items.get(&path).unwrap()),
+            RowSelected(row) => {
+                match row {
+                    Some(row) => println!("{:?}", self.model.device_list_items.iter().find(|(_,v)| v.clone().clone() == row).unwrap().0),
+                    None => println!("None")
+                }
+            }
         }
     }
 
@@ -60,7 +69,7 @@ impl Widget for DevicesList {
     view! {
         #[name="devices_list"]
         gtk::ListBox {
-            
+            row_selected(_,row) => Msg::RowSelected(row.map(|e| e.clone()))
         }
     }
 }
