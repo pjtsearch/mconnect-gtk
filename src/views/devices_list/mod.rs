@@ -8,18 +8,19 @@ use relm_derive::{Msg, widget};
 use relm::{Component, ContainerWidget, Widget};
 use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties, OrgMconnectDeviceManagerDeviceRemoved};
 use relm::Update;
+use std::path::PathBuf;
 use self::Msg::*;
 
 mod devices_list_item;
 
 #[derive(Msg)]
 pub enum Msg {
-    AddDevice(String, Device),
-    RemoveDevice(String)
+    AddDevice(PathBuf, Device),
+    RemoveDevice(PathBuf)
 }
 
 pub struct Model {
-    device_list_items: HashMap<String, Component<DevicesListItem>>,
+    device_list_items: HashMap<PathBuf, Component<DevicesListItem>>,
 }
 
 #[widget]
@@ -45,13 +46,13 @@ impl Widget for DevicesList {
     fn init_view(&mut self){
         with_conn(DeviceManager, |p| p.list_devices().unwrap())
             .iter()
-            .map(|path| (path.to_string(), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
-            .map(|(path, map)| (path, DeviceBuilder::default().from_map(map).build().unwrap()))
+            .map(|path| (PathBuf::from(path.to_string()), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
+            .map(|(path, map)| (path.clone(), DeviceBuilder::default().from_map(path, map).build().unwrap()))
             .for_each(|(path, device)|{
                 self.update(AddDevice(path, device))
             });
         with_conn(DeviceManager, |p| p.match_signal(|h: OrgMconnectDeviceManagerDeviceRemoved, _: &Connection, _: &Message| {
-            RemoveDevice(h.path);
+            RemoveDevice(PathBuf::from(h.path));
             true
         })).unwrap();
     }

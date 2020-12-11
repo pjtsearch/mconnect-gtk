@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use dbus::arg::Variant;
 use std::collections::HashMap;
 use dbus::arg;
@@ -6,6 +7,7 @@ use dbus::arg::RefArg;
 #[derive(Default, Builder, Debug)]
 #[builder(setter(into))]
 pub struct Device {
+    pub path: PathBuf,
     pub id: String,
     pub name: String,
     pub device_type: String,
@@ -22,8 +24,9 @@ pub struct Device {
 }
 
 impl DeviceBuilder {
-    pub fn from_map(&mut self, map:HashMap<String, Variant<Box<dyn arg::RefArg>>>) -> &mut DeviceBuilder {
+    pub fn from_map(&mut self, path: PathBuf, map:HashMap<String, Variant<Box<dyn arg::RefArg>>>) -> &mut DeviceBuilder {
         self.id(map.get("Id").unwrap().as_str().unwrap())
+            .path(path)
             .name(map.get("Name").unwrap().as_str().unwrap())
             .device_type(map.get("DeviceType").unwrap().as_str().unwrap())
             .protocol_version(map.get("ProtocolVersion").unwrap().as_i64().unwrap().to_owned())
