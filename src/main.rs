@@ -1,23 +1,13 @@
-use std::env::args;
-use gtk::prelude::*;
-use gio::prelude::*;
+#[macro_use]
+extern crate derive_builder;
 
-pub fn main() {
-    let application = gtk::Application::new(
-        Some("com.pjtsearch.mconnect-gtk"),
-        gio::ApplicationFlags::empty(),
-    )
-    .expect("Initialization failed...");
+use relm::Widget;
+use crate::views::MainWindow;
 
-    application.connect_activate(|app| {
-        let glade_src = include_str!("main_window.glade");
-        let builder = gtk::Builder::from_string(glade_src);
+mod views;
+mod utils;
+mod mconnect_dbus;
 
-        let window: gtk::ApplicationWindow = builder.get_object("main_window").unwrap();
-        window.set_application(Some(app));
-
-        window.show_all();
-    });
-
-    application.run(&args().collect::<Vec<_>>());
+fn main() {
+    MainWindow::run(()).expect("Win::run failed");
 }
