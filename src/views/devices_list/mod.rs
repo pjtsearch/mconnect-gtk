@@ -1,13 +1,11 @@
 use std::path::PathBuf;
-use dbus::Message;
-use dbus::blocking::Connection;
 use crate::utils::conn_util::{with_conn, ConnVariant::*};
 use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::devices_list_item::DevicesListItem;
-use std::collections::HashMap;
-use vgtk::lib::gtk::{prelude::*, ListBox};
+use vgtk::lib::gtk::*;
 use vgtk::{gtk, Component, UpdateAction, VNode};
-use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties, OrgMconnectDeviceManagerDeviceRemoved};
+use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties};
+use std::convert::TryFrom;
 
 use self::DevicesListMessage::*;
 
@@ -15,9 +13,7 @@ mod devices_list_item;
 
 #[derive(Clone, Debug)]
 pub enum DevicesListMessage {
-    AddDevice(PathBuf, Device),
-    RemoveDevice(PathBuf),
-    OnClick(Device)
+    RowSelected(Option<i32>)
 }
 
 #[derive(Clone, Debug, Default)]
@@ -31,24 +27,16 @@ impl Component for DevicesList {
 
     fn update(&mut self, event: DevicesListMessage) -> UpdateAction<Self> {
         match event {
-            AddDevice(path, device) => {
-                self.devices.push(device); UpdateAction::Render
+            RowSelected(row) => {
+                match row {
+                    Some(row) => {
+                        let device = self.devices[usize::try_from(row).unwrap()].clone();
+                        println!("{:#?}", device);
+                        UpdateAction::None
+                    },
+                    None => UpdateAction::None
+                }
             }
-            RemoveDevice(path) => {
-                // self.devices.remove(
-                //                     self.devices.get(&path).unwrap());
-                UpdateAction::Render
-            }
-            OnClick(device) => {
-                println!("{:#?}", device);
-                UpdateAction::None
-            }
-            // RowSelected(row) => {
-            //     match row {
-            //         Some(row) => println!("{:?}", self.model.device_list_items.iter().find(|(_,v)| v.clone().clone() == row).unwrap().0),
-            //         None => println!("None")
-            //     }
-            // }
         }
     }
 
@@ -64,10 +52,10 @@ impl Component for DevicesList {
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <ListBox>
+            <ListBox on row_selected=|_,row| DevicesListMessage::RowSelected(row.map(|r|r.to_owned().get_index()))>
                 {
                     self.devices.iter().map(|dev| gtk! {
-                        <@DevicesListItem device=dev on clicked=|device| DevicesListMessage::OnClick(device)/>
+                        <@DevicesListItem device=dev/>
                     })
                 }
             </ListBox>
