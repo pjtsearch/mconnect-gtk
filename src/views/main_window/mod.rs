@@ -1,16 +1,21 @@
 // use crate::views::devices_list::DevicesList;
+use std::path::PathBuf;
+use crate::utils::conn_util::{with_conn, ConnVariant::*};
+use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties};
+use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::DevicesList;
 use vgtk::{ext::*, gtk, Component, UpdateAction, VNode};
 use vgtk::lib::{gtk::*, gio::ApplicationFlags};
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
-    counter: usize,
+    devices: Vec<Device>
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
-   Exit
+   Exit,
+   DeviceSelected(Device)
 }
 
 impl Component for MainWindow {
@@ -23,7 +28,21 @@ impl Component for MainWindow {
                vgtk::quit();
                UpdateAction::None
            }
+           Message::DeviceSelected(device) => {
+               println!("{}", device.name);
+               UpdateAction::None
+           }
        }
+   }
+
+   fn create(_props: Self::Properties) -> Self {
+        MainWindow {
+            devices: with_conn(DeviceManager, |p| p.list_devices().unwrap())
+                .iter()
+                .map(|path| (PathBuf::from(path.to_string()), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
+                .map(|(path, map)|DeviceBuilder::default().from_map(path, map).build().unwrap())
+                .collect()
+        }
    }
 
    fn view(&self) -> VNode<MainWindow> {
@@ -31,7 +50,7 @@ impl Component for MainWindow {
            <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty())>
                <Window on destroy=|_| Message::Exit>
                    <HeaderBar title="MConnect" show_close_button=true />
-                    <@DevicesList/>
+                    <@DevicesList devices=self.devices.clone() on device_selected=|d| Message::DeviceSelected(d)/>
                </Window>
            </Application>
        }
