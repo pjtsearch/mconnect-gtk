@@ -1,47 +1,45 @@
-use gtk::Orientation::Horizontal;
 use crate::utils::device::Device;
-use relm::{Widget};
-use relm_derive::{Msg, widget};
-use gtk::prelude::*;
+use vgtk::lib::gtk::{prelude::*, ListBoxRow, Orientation::Horizontal, Label, Box};
+use vgtk::{gtk, Component, UpdateAction, VNode};
 
-pub struct Model {
-    device: Device
+#[derive(Clone, Debug, Default)]
+pub struct DevicesListItem {
+    pub device: Device
 }
 
-#[derive(Msg)]
-pub enum Msg {
+#[derive(Clone, Debug)]
+pub enum Message {
     
 }
 
-#[widget]
-impl Widget for DevicesListItem {
-    fn model(device: Device) -> Model {
-        Model {
-            device: device
-        }
+impl Component for DevicesListItem {
+    type Message = Message;
+    type Properties = Self;
+
+    fn create(props: Self) -> Self {
+        props
     }
 
-    fn update(&mut self, event: Msg) {
+    fn change(&mut self, props: Self) -> UpdateAction<Self> {
+        *self = props;
+        UpdateAction::Render
+    }
+
+    fn update(&mut self, event: Message) -> UpdateAction<Self> {
         match event {
-
+            _ => UpdateAction::None
         }
     }
 
-    view! {
-        gtk::ListBoxRow {
-            gtk::Box {
-                orientation: Horizontal,
-                gtk::Label {
-                    label: &self.model.device.name,
-                    widget_name: "label",
-                    text: &self.model.device.name,
-                },
-                gtk::Label {
-                    label: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
-                    widget_name: "label",
-                    text: &(" Connected: ".to_string() + &self.model.device.is_connected.to_string()),
-                },
-            }
+    fn view(&self) -> VNode<Self> {
+        gtk! {
+            <ListBoxRow>
+                <Box orientation=Horizontal>
+                    <Label label=self.device.name.clone()></Label>
+                    <Label label=" Connected: ".to_string() + &self.device.is_connected.to_string()></Label>
+                </Box>
+            </ListBoxRow>
         }
     }
+
 }

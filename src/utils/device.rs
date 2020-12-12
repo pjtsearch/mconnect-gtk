@@ -4,7 +4,7 @@ use std::collections::HashMap;
 use dbus::arg;
 use dbus::arg::RefArg;
 
-#[derive(Default, Builder, Debug)]
+#[derive(Default, Builder, Debug, Clone)]
 #[builder(setter(into))]
 pub struct Device {
     pub path: PathBuf,

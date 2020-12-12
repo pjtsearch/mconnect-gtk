@@ -1,45 +1,39 @@
+// use crate::views::devices_list::DevicesList;
 use crate::views::devices_list::DevicesList;
-use crate::views::main_window::header::Header;
-use relm::init;
-use gtk::{
-    Inhibit,
-    OrientableExt,
-    WidgetExt,
-};
-use gtk::Orientation::Vertical;
-use relm::{Widget};
-use relm_derive::{Msg, widget};
-use gtk::prelude::*;
-use self::Msg::*;
-mod header;
+use vgtk::{ext::*, gtk, Component, UpdateAction, VNode};
+use vgtk::lib::{gtk::*, gio::ApplicationFlags};
 
-#[derive(Msg)]
-pub enum Msg {
-    Quit
+#[derive(Clone, Default, Debug)]
+pub struct MainWindow {
+    counter: usize,
 }
 
-pub struct Model {}
+#[derive(Clone, Debug)]
+pub enum Message {
+   Exit
+}
 
-#[widget]
-impl Widget for MainWindow {
-    fn model() -> Model {
-        Model {}
-    }
+impl Component for MainWindow {
+   type Message = Message;
+   type Properties = ();
 
-    fn update(&mut self, event: Msg) {
-        match event {
-            Quit => gtk::main_quit()
-        }
-    }
+   fn update(&mut self, message: Message) -> UpdateAction<Self> {
+       match message {
+           Message::Exit => {
+               vgtk::quit();
+               UpdateAction::None
+           }
+       }
+   }
 
-    view! {
-        gtk::Window {
-            titlebar: Some(init::<Header>("MConnect".to_string()).unwrap().widget()),
-            gtk::Box {
-                orientation: Vertical,
-                DevicesList {}
-            },
-            delete_event(_, _) => (Quit, Inhibit(false)),
-        }
-    }
+   fn view(&self) -> VNode<MainWindow> {
+       gtk! {
+           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty())>
+               <Window on destroy=|_| Message::Exit>
+                   <HeaderBar title="MConnect" show_close_button=true />
+                    <@DevicesList/>
+               </Window>
+           </Application>
+       }
+   }
 }
