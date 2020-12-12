@@ -1,4 +1,5 @@
 // use crate::views::devices_list::DevicesList;
+use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
 use crate::utils::conn_util::{with_conn, ConnVariant::*};
 use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties};
@@ -30,7 +31,6 @@ impl Component for MainWindow {
                UpdateAction::None
            }
            Message::DeviceSelected(device) => {
-               println!("{}", device.name);
                self.selected_device = Some(device);
                UpdateAction::Render
            }
@@ -57,7 +57,7 @@ impl Component for MainWindow {
                         <@DevicesList devices=self.devices.clone() on device_selected=|d| Message::DeviceSelected(d)/>
                         {
                             gtk_if!(self.selected_device.is_some() == true => {
-                                <Label label=self.selected_device.clone().unwrap().name />
+                                <@DeviceDisplay device=self.selected_device.clone().unwrap() />
                             })
                         }
                     </Box>
