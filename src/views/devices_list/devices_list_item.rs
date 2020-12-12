@@ -34,7 +34,7 @@ impl Component for DevicesListItem {
     fn view(&self) -> VNode<Self> {
         gtk! {
             <ListBoxRow>
-                <Box orientation=Horizontal>
+                <Box orientation=Horizontal  margin_top=10 margin_bottom=10>
                     <Label label=self.device.name.clone()></Label>
                     <Label label=" Connected: ".to_string() + &self.device.is_connected.to_string()></Label>
                 </Box>
