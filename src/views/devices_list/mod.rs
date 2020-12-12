@@ -16,7 +16,8 @@ mod devices_list_item;
 #[derive(Clone, Debug)]
 pub enum DevicesListMessage {
     AddDevice(PathBuf, Device),
-    RemoveDevice(PathBuf)
+    RemoveDevice(PathBuf),
+    OnClick(Device)
 }
 
 #[derive(Clone, Debug, Default)]
@@ -37,6 +38,10 @@ impl Component for DevicesList {
                 // self.devices.remove(
                 //                     self.devices.get(&path).unwrap());
                 UpdateAction::Render
+            }
+            OnClick(device) => {
+                println!("{:#?}", device);
+                UpdateAction::None
             }
             // RowSelected(row) => {
             //     match row {
@@ -62,7 +67,7 @@ impl Component for DevicesList {
             <ListBox>
                 {
                     self.devices.iter().map(|dev| gtk! {
-                        <@DevicesListItem device=dev />
+                        <@DevicesListItem device=dev on clicked=|device| DevicesListMessage::OnClick(device)/>
                     })
                 }
             </ListBox>

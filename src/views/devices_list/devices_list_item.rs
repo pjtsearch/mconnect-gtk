@@ -1,15 +1,17 @@
+use vgtk::Callback;
 use crate::utils::device::Device;
-use vgtk::lib::gtk::{prelude::*, ListBoxRow, Orientation::Horizontal, Label, Box};
+use vgtk::lib::gtk::{prelude::*, Button, Orientation::Horizontal, Label, Box};
 use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct DevicesListItem {
-    pub device: Device
+    pub device: Device,
+    pub on_clicked: Callback<Device>
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    
+    OnClick
 }
 
 impl Component for DevicesListItem {
@@ -27,18 +29,22 @@ impl Component for DevicesListItem {
 
     fn update(&mut self, event: Message) -> UpdateAction<Self> {
         match event {
+            Message::OnClick => {
+                self.on_clicked.send(self.device.clone());
+                UpdateAction::None
+            }
             _ => UpdateAction::None
         }
     }
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <ListBoxRow>
+            <Button on clicked=|_| Message::OnClick>
                 <Box orientation=Horizontal>
                     <Label label=self.device.name.clone()></Label>
                     <Label label=" Connected: ".to_string() + &self.device.is_connected.to_string()></Label>
                 </Box>
-            </ListBoxRow>
+            </Button>
         }
     }
 
