@@ -2,7 +2,7 @@
 use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
 use crate::utils::conn_util::{with_conn, ConnVariant::*};
-use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgFreedesktopDBusProperties};
+use crate::mconnect_dbus::{OrgMconnectDeviceManager};
 use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::DevicesList;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
@@ -41,8 +41,10 @@ impl Component for MainWindow {
         MainWindow {
             devices: with_conn(DeviceManager, |p| p.list_devices().unwrap())
                 .iter()
-                .map(|path| (PathBuf::from(path.to_string()), with_conn(Device(path), |p| p.get_all("org.mconnect.Device")).unwrap()))
-                .map(|(path, map)|DeviceBuilder::default().from_map(path, map).build().unwrap())
+                .map(|path| 
+                        with_conn(
+                            Device(path), 
+                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()))
                 .collect(),
             selected_device: None
         }

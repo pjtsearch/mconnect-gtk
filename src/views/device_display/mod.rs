@@ -1,6 +1,6 @@
 use crate::utils::device::Device;
-use vgtk::lib::gtk::{*, Orientation::Horizontal};
-use vgtk::{gtk, Component, UpdateAction, VNode};
+use vgtk::lib::gtk::*;
+use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct DeviceDisplay {
@@ -9,7 +9,8 @@ pub struct DeviceDisplay {
 
 #[derive(Clone, Debug)]
 pub enum Message {
-
+    Allow,
+    Disallow
 }
 
 impl Component for DeviceDisplay {
@@ -27,13 +28,35 @@ impl Component for DeviceDisplay {
 
     fn update(&mut self, event: Message) -> UpdateAction<Self> {
         match event {
-            _ => UpdateAction::None
+            Message::Allow => {
+                self.device.allow().unwrap();
+                self.device = self.device.refreshed();
+                UpdateAction::Render
+            }
+            Message::Disallow => {
+                self.device.disallow().unwrap();
+                self.device = self.device.refreshed();
+                UpdateAction::Render
+            }
         }
     }
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <Label label=self.device.clone().name />
+            <Box orientation=Orientation::Vertical>
+                
+                <Label label=self.device.clone().name />
+                {
+                    gtk_if!(!self.device.allowed => {
+                        <Button label="Allow" on clicked=|_| Message::Allow />
+                    })
+                }
+                {
+                    gtk_if!(self.device.allowed => {
+                        <Button label="Disallow" on clicked=|_| Message::Disallow />
+                    })
+                }
+            </Box>
         }
     }
 
