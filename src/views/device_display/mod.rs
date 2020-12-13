@@ -9,8 +9,7 @@ pub struct DeviceDisplay {
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    Allow,
-    Disallow
+    
 }
 
 impl Component for DeviceDisplay {
@@ -28,16 +27,7 @@ impl Component for DeviceDisplay {
 
     fn update(&mut self, event: Message) -> UpdateAction<Self> {
         match event {
-            Message::Allow => {
-                self.device.allow().unwrap();
-                self.device = self.device.refreshed();
-                UpdateAction::Render
-            }
-            Message::Disallow => {
-                self.device.disallow().unwrap();
-                self.device = self.device.refreshed();
-                UpdateAction::Render
-            }
+
         }
     }
 
@@ -46,16 +36,6 @@ impl Component for DeviceDisplay {
             <Box orientation=Orientation::Vertical>
                 
                 <Label label=self.device.clone().name />
-                {
-                    gtk_if!(!self.device.allowed => {
-                        <Button label="Allow" on clicked=|_| Message::Allow />
-                    })
-                }
-                {
-                    gtk_if!(self.device.allowed => {
-                        <Button label="Disallow" on clicked=|_| Message::Disallow />
-                    })
-                }
             </Box>
         }
     }
