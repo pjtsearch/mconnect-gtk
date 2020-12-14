@@ -1,6 +1,7 @@
-use crate::utils::device::Device;
+use crate::utils::device::{Device, DeviceType};
 use vgtk::lib::gtk::*;
 use vgtk::{gtk, Component, UpdateAction, VNode};
+use vgtk::ext::ImageExtHelpers;
 
 #[derive(Clone, Debug, Default)]
 pub struct DeviceDisplay {
@@ -33,10 +34,26 @@ impl Component for DeviceDisplay {
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <Box orientation=Orientation::Vertical margin_start=10 margin_top=10>
-                
-                <Label label=self.device.clone().name />
-            </Box>
+            <ListBox margin_start=20 margin_end=20 margin_top=10 hexpand=true>
+                <ListBoxRow>
+                    <Box orientation=Orientation::Horizontal margin_start=5 margin_end=20>
+                        <Image property_icon_name={match self.device.device_type {
+                            DeviceType::Phone => "phone",
+                            DeviceType::Desktop => "computer",
+                            DeviceType::Tablet => "phone"
+                        }} pixel_size=75 />
+                        <Label label=self.device.clone().name />
+                        <Label 
+                            Box::pack_type=PackType::End 
+                            label=format!("Battery {}: {}%",
+                                match self.device.clone().battery_charging {
+                                    true => "Charging",
+                                    false => "Discharging"
+                                },
+                                self.device.clone().battery_level.to_string())/>
+                    </Box>
+                </ListBoxRow>
+            </ListBox>
         }
     }
 
