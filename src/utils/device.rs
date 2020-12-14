@@ -3,13 +3,24 @@ use dbus::blocking::{BlockingSender, Proxy};
 use crate::mconnect_dbus::{OrgMconnectDevice, OrgMconnectDeviceBattery, OrgMconnectDeviceShare, OrgMconnectDeviceTelephony, OrgMconnectDeviceManager};
 use std::path::PathBuf;
 
+#[derive(Debug, Clone)]
+pub enum DeviceType {
+    Phone,
+    Desktop,
+    Tablet
+}
+
+impl Default for DeviceType {
+    fn default() -> Self { Self::Phone }
+}
+
 #[derive(Default, Builder, Debug, Clone)]
 #[builder(setter(into))]
 pub struct Device {
     pub path: PathBuf,
     pub id: String,
     pub name: String,
-    pub device_type: String,
+    pub device_type: DeviceType,
     pub protocol_version: i64,
     pub address: String,
     pub is_paired: bool,
@@ -29,7 +40,12 @@ impl DeviceBuilder {
         self.id = device.id().ok();
         self.path = Some(path);
         self.name = device.name().ok();
-        self.device_type = device.device_type().ok();
+        self.device_type = device.device_type().ok().map(|d_type| match &d_type as &str {
+            "phone" => DeviceType::Phone,
+            "desktop" => DeviceType::Desktop,
+            "tablet" => DeviceType::Tablet,
+            _ => DeviceType::default()
+        });
         self.protocol_version = device.protocol_version().ok().map(|p|i64::from(p));
         self.address = device.address().ok();
         self.is_paired = device.is_paired().ok();

@@ -1,6 +1,6 @@
 use crate::utils::device::Device;
 use vgtk::lib::gtk::*;
-use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
+use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct DeviceDisplay {
@@ -9,7 +9,7 @@ pub struct DeviceDisplay {
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    
+
 }
 
 impl Component for DeviceDisplay {
@@ -33,7 +33,7 @@ impl Component for DeviceDisplay {
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <Box orientation=Orientation::Vertical>
+            <Box orientation=Orientation::Vertical margin_start=10 margin_top=10>
                 
                 <Label label=self.device.clone().name />
             </Box>
