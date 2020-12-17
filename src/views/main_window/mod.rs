@@ -2,7 +2,7 @@
 use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
 use crate::utils::conn_util::{with_conn, ConnVariant::*};
-use crate::mconnect_dbus::{OrgMconnectDeviceManager};
+use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgMconnectDeviceShare};
 use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::DevicesList;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
@@ -20,6 +20,7 @@ pub enum Message {
    DeviceSelected(Device),
    AllowSelected,
    DisallowSelected,
+   ShareFile,
    Refresh
 }
 
@@ -57,6 +58,22 @@ impl Component for MainWindow {
                                 .collect();
                 self.selected_device = self.selected_device.clone().map(|d| d.refreshed());
                 UpdateAction::Render
+            },
+            Message::ShareFile => {
+                let dialog = FileChooserDialog::with_buttons::<Window>(
+                    Some("Open File"),
+                    None,
+                    FileChooserAction::Open,
+                    &[("_Cancel", ResponseType::Cancel), ("_Open", ResponseType::Accept)]
+                );
+                let result = dialog.run();
+                if result == ResponseType::Accept {
+                    if let Some(uri) = dialog.get_filename() {
+                        println!("{:?}", self.selected_device.clone().and_then(|d| d.share_file(uri.to_str().unwrap()).ok()).unwrap());
+                    }
+                }
+                dialog.close();
+                UpdateAction::None
             }
        }
    }
@@ -82,7 +99,10 @@ impl Component for MainWindow {
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
                         {
                             gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
-                                <Button label="Disallow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::DisallowSelected />
+                                <Box HeaderBar::pack_type=PackType::End>
+                                    <Button label="Share File" on clicked=|_| Message::ShareFile />
+                                    <Button label="Disallow" on clicked=|_| Message::DisallowSelected />
+                                </Box>
                             })
                         }
                         {

@@ -3,6 +3,7 @@
         "Mconnect",
         "Orientable",
         "dbus",
+        "hexpand",
         "relm",
         "vgtk"
     ]
