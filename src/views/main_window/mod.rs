@@ -13,7 +13,8 @@ mod share_file_btn;
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
     devices: Option<Vec<Device>>,
-    selected_device: Option<Device>
+    selected_device: Option<Device>,
+    error: Option<String>
 }
 
 #[derive(Clone, Debug)]
@@ -24,6 +25,10 @@ pub enum Message {
    DisallowSelected,
    ShareFile(PathBuf),
    Refresh
+}
+
+impl MainWindow {
+    fn update_err(&mut self, err: dbus::Error) { self.error = Some(err.to_string()) }
 }
 
 impl Component for MainWindow {
@@ -41,32 +46,48 @@ impl Component for MainWindow {
                UpdateAction::Render
             }
             Message::AllowSelected => {
-                self.selected_device.clone().map(|d|d.allow());
-                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.allow();
+                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
+                }
                 UpdateAction::Render
             }
             Message::DisallowSelected => {
-                self.selected_device.clone().map(|d|d.disallow());
-                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.disallow();
+                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
+                }
                 UpdateAction::Render
             }
             Message::Refresh => {
-                self.devices = DeviceManager.list_device_structs().ok();
-                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
+                self.devices = DeviceManager.list_device_structs().map_err(|e|self.update_err(e)).ok();
+                if let Some(selected_device) = self.selected_device.clone() {
+                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
+                }
                 UpdateAction::Render
             },
             Message::ShareFile(file) => {
-                self.selected_device.clone().map(|d| d.share_file(file.to_str().unwrap()));
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.share_file(file.to_str().unwrap());
+                }
                 UpdateAction::None
             }
        }
    }
 
    fn create(_props: Self::Properties) -> Self {
-        MainWindow {
-            devices: DeviceManager.list_device_structs().ok(),
-            selected_device: None
-        }
+       match DeviceManager.list_device_structs() {
+           Ok(devices) => MainWindow {
+               devices: Some(devices),
+               selected_device: None,
+               error: None
+           },
+           Err(err) => MainWindow {
+                devices: None,
+                selected_device: None,
+                error: Some(err.to_string())
+            }
+       }
    }
 
    fn view(&self) -> VNode<MainWindow> {
@@ -88,6 +109,9 @@ impl Component for MainWindow {
                         })} 
                     </HeaderBar>
                     <Box>
+                        {gtk_if!(self.error.is_some() => {
+                            <Label text=self.error.clone().unwrap() />
+                        })}
                         {gtk_if!(self.devices.is_some() => {
                             <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
                         })}
