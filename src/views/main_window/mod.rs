@@ -5,8 +5,10 @@ use crate::utils::conn_util::{with_conn, ConnVariant::*};
 use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgMconnectDeviceShare};
 use crate::utils::device::{Device, DeviceBuilder};
 use crate::views::devices_list::DevicesList;
+use crate::views::main_window::share_file_btn::ShareFileBtn;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
 use vgtk::lib::{gtk::*, gio::ApplicationFlags};
+mod share_file_btn;
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
@@ -20,7 +22,7 @@ pub enum Message {
    DeviceSelected(Device),
    AllowSelected,
    DisallowSelected,
-   ShareFile,
+   ShareFile(PathBuf),
    Refresh
 }
 
@@ -59,20 +61,8 @@ impl Component for MainWindow {
                 self.selected_device = self.selected_device.clone().map(|d| d.refreshed());
                 UpdateAction::Render
             },
-            Message::ShareFile => {
-                let dialog = FileChooserDialog::with_buttons::<Window>(
-                    Some("Open File"),
-                    None,
-                    FileChooserAction::Open,
-                    &[("_Cancel", ResponseType::Cancel), ("_Open", ResponseType::Accept)]
-                );
-                let result = dialog.run();
-                if result == ResponseType::Accept {
-                    if let Some(uri) = dialog.get_filename() {
-                        println!("{:?}", self.selected_device.clone().and_then(|d| d.share_file(uri.to_str().unwrap()).ok()).unwrap());
-                    }
-                }
-                dialog.close();
+            Message::ShareFile(file) => {
+                println!("{:?}", self.selected_device.clone().and_then(|d| d.share_file(file.to_str().unwrap()).ok()).unwrap());
                 UpdateAction::None
             }
        }
@@ -98,15 +88,15 @@ impl Component for MainWindow {
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
                         {
-                            gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
+                            gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
                                 <Box HeaderBar::pack_type=PackType::End>
-                                    <Button label="Share File" on clicked=|_| Message::ShareFile />
+                                    <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
                                     <Button label="Disallow" on clicked=|_| Message::DisallowSelected />
                                 </Box>
                             })
                         }
                         {
-                            gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().allowed => {
+                            gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().is_connected => {
                                 <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
                             })
                         } 
