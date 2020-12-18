@@ -1,9 +1,9 @@
 // use crate::views::devices_list::DevicesList;
+use crate::utils::device_manager::DeviceManager;
 use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
-use crate::utils::conn_util::{with_conn, ConnVariant::*};
-use crate::mconnect_dbus::{OrgMconnectDeviceManager, OrgMconnectDeviceShare};
-use crate::utils::device::{Device, DeviceBuilder};
+use crate::mconnect_dbus::OrgMconnectDeviceShare;
+use crate::utils::device::Device;
 use crate::views::devices_list::DevicesList;
 use crate::views::main_window::share_file_btn::ShareFileBtn;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
@@ -12,7 +12,7 @@ mod share_file_btn;
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
-    devices: Vec<Device>,
+    devices: Option<Vec<Device>>,
     selected_device: Option<Device>
 }
 
@@ -41,29 +41,22 @@ impl Component for MainWindow {
                UpdateAction::Render
             }
             Message::AllowSelected => {
-                self.selected_device.clone().unwrap().allow().unwrap();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
+                self.selected_device.clone().map(|d|d.allow());
+                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
                 UpdateAction::Render
             }
             Message::DisallowSelected => {
-                self.selected_device.clone().unwrap().disallow().unwrap();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
+                self.selected_device.clone().map(|d|d.disallow());
+                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
                 UpdateAction::Render
             }
             Message::Refresh => {
-                self.devices = with_conn(DeviceManager, |p| p.list_devices().unwrap())
-                                .unwrap()
-                                .iter()
-                                .map(|path| 
-                                        with_conn(
-                                            Device(path), 
-                                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()).unwrap())
-                                .collect();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
+                self.devices = DeviceManager.list_device_structs().ok();
+                self.selected_device = self.selected_device.clone().and_then(|d| d.refreshed().ok());
                 UpdateAction::Render
             },
             Message::ShareFile(file) => {
-                println!("{:?}", self.selected_device.clone().and_then(|d| d.share_file(file.to_str().unwrap()).ok()).unwrap());
+                self.selected_device.clone().map(|d| d.share_file(file.to_str().unwrap()));
                 UpdateAction::None
             }
        }
@@ -71,14 +64,7 @@ impl Component for MainWindow {
 
    fn create(_props: Self::Properties) -> Self {
         MainWindow {
-            devices: with_conn(DeviceManager, |p| p.list_devices().unwrap())
-                .unwrap()
-                .iter()
-                .map(|path| 
-                        with_conn(
-                            Device(path), 
-                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()).unwrap())
-                .collect(),
+            devices: DeviceManager.list_device_structs().ok(),
             selected_device: None
         }
    }
@@ -89,31 +75,25 @@ impl Component for MainWindow {
                <Window on destroy=|_| Message::Exit>
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
-                        {
-                            gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
-                                <Button HeaderBar::pack_type=PackType::End label="Disallow" on clicked=|_| Message::DisallowSelected />
-                            })
-                        }
-                        {
-                            gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
-                                <Box HeaderBar::pack_type=PackType::End>
-                                    <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
-                                </Box>
-                            })
-                        }
-                        {
-                            gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().allowed => {
-                                <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
-                            })
-                        } 
+                        {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
+                            <Button HeaderBar::pack_type=PackType::End label="Disallow" on clicked=|_| Message::DisallowSelected />
+                        })}
+                        {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
+                            <Box HeaderBar::pack_type=PackType::End>
+                                <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
+                            </Box>
+                        })}
+                        {gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().allowed => {
+                            <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
+                        })} 
                     </HeaderBar>
                     <Box>
-                        <@DevicesList devices=self.devices.clone() on device_selected=|d| Message::DeviceSelected(d)/>
-                        {
-                            gtk_if!(self.selected_device.is_some() == true => {
-                                <@DeviceDisplay device=self.selected_device.clone().unwrap() />
-                            })
-                        }
+                        {gtk_if!(self.devices.is_some() => {
+                            <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
+                        })}
+                        {gtk_if!(self.selected_device.is_some() => {
+                            <@DeviceDisplay device=self.selected_device.clone().unwrap() />
+                        })}
                     </Box>
                </Window>
            </Application>
