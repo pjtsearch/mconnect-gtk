@@ -63,47 +63,47 @@ impl DeviceBuilder {
 }
 
 impl Device {
-    pub fn refreshed(&self) -> Device {
+    pub fn refreshed(&self) -> Result<Device, dbus::Error> {
         with_conn(
             ConnVariant::Device(&self.path.to_string_lossy()), 
             |p| DeviceBuilder::default().from_proxy(self.path.clone(), p).build().unwrap())
     }
 
-    pub fn allow(&self) -> std::result::Result<(), dbus::Error> {
+    pub fn allow(&self) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::DeviceManager, 
-            |p| p.allow_device(&self.path.to_string_lossy()))
+            |p| p.allow_device(&self.path.to_string_lossy())).and_then(|e| e)
     }
 
-    pub fn disallow(&self) -> std::result::Result<(), dbus::Error> {
+    pub fn disallow(&self) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::DeviceManager, 
-            |p| p.disallow_device(&self.path.to_string_lossy()))
+            |p| p.disallow_device(&self.path.to_string_lossy())).and_then(|e| e)
     }
 }
 
 impl OrgMconnectDeviceShare for Device {
-    fn share_file(&self, path: &str) -> std::result::Result<(), dbus::Error> {
+    fn share_file(&self, path: &str) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_file(path))
+            |p| p.share_file(path)).and_then(|e| e)
     }
-    fn share_url(&self, url: &str) -> std::result::Result<(), dbus::Error> {
+    fn share_url(&self, url: &str) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_url(url))
+            |p| p.share_url(url)).and_then(|e| e)
     }
-    fn share_text(&self, text: &str) -> std::result::Result<(), dbus::Error> {
+    fn share_text(&self, text: &str) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_text(text))
+            |p| p.share_text(text)).and_then(|e| e)
     }
 }
 
 impl OrgMconnectDeviceTelephony for Device {
-    fn send_sms(&self, number: &str, message: &str) -> std::result::Result<(), dbus::Error> {
+    fn send_sms(&self, number: &str, message: &str) -> Result<(), dbus::Error> {
         with_conn(
             ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.send_sms(number, message))
+            |p| p.send_sms(number, message)).and_then(|e| e)
     }
 }

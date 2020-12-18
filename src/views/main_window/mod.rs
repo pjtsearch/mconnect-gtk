@@ -42,23 +42,24 @@ impl Component for MainWindow {
             }
             Message::AllowSelected => {
                 self.selected_device.clone().unwrap().allow().unwrap();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed());
+                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
                 UpdateAction::Render
             }
             Message::DisallowSelected => {
                 self.selected_device.clone().unwrap().disallow().unwrap();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed());
+                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
                 UpdateAction::Render
             }
             Message::Refresh => {
                 self.devices = with_conn(DeviceManager, |p| p.list_devices().unwrap())
+                                .unwrap()
                                 .iter()
                                 .map(|path| 
                                         with_conn(
                                             Device(path), 
-                                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()))
+                                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()).unwrap())
                                 .collect();
-                self.selected_device = self.selected_device.clone().map(|d| d.refreshed());
+                self.selected_device = self.selected_device.clone().map(|d| d.refreshed().unwrap());
                 UpdateAction::Render
             },
             Message::ShareFile(file) => {
@@ -71,11 +72,12 @@ impl Component for MainWindow {
    fn create(_props: Self::Properties) -> Self {
         MainWindow {
             devices: with_conn(DeviceManager, |p| p.list_devices().unwrap())
+                .unwrap()
                 .iter()
                 .map(|path| 
                         with_conn(
                             Device(path), 
-                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()))
+                            |p| DeviceBuilder::default().from_proxy(PathBuf::from(path.to_string()), p).build().unwrap()).unwrap())
                 .collect(),
             selected_device: None
         }
@@ -88,15 +90,19 @@ impl Component for MainWindow {
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
                         {
+                            gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
+                                <Button HeaderBar::pack_type=PackType::End label="Disallow" on clicked=|_| Message::DisallowSelected />
+                            })
+                        }
+                        {
                             gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
                                 <Box HeaderBar::pack_type=PackType::End>
                                     <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
-                                    <Button label="Disallow" on clicked=|_| Message::DisallowSelected />
                                 </Box>
                             })
                         }
                         {
-                            gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().is_connected => {
+                            gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().allowed => {
                                 <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
                             })
                         } 
