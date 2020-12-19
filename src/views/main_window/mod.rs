@@ -5,11 +5,12 @@ use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
 use crate::mconnect_dbus::OrgMconnectDeviceShare;
 use crate::utils::device::Device;
+use crate::utils::component_utils::*;
 use crate::views::devices_list::DevicesList;
 use crate::views::main_window::share_file_btn::ShareFileBtn;
 use crate::views::main_window::notification::Notification;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
-use vgtk::lib::{gtk::*, gio::ApplicationFlags};
+use vgtk::lib::{gtk::*, gio::ApplicationFlags, gio::ApplicationExt};
 mod share_file_btn;
 mod notification;
 
@@ -27,7 +28,8 @@ pub enum Message {
    AllowSelected,
    DisallowSelected,
    ShareFile(PathBuf),
-   Refresh
+   Refresh,
+   None
 }
 
 impl UpdateResult<Message> for MainWindow {
@@ -67,7 +69,8 @@ impl UpdateResult<Message> for MainWindow {
                     selected_device.share_file(file.to_str().unwrap())?;
                 }
                 Ok(UpdateAction::Render)
-            }
+            },
+            Message::None => Ok(UpdateAction::None)
        }
     }
 }
@@ -106,7 +109,8 @@ impl Component for MainWindow {
 
    fn view(&self) -> VNode<MainWindow> {
        gtk! {
-           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty())>
+           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty()) 
+                on startup=|_| css(include_str!("main_window.css"), Message::None)>
                <Window on destroy=|_| Message::Exit>
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
