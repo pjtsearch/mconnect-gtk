@@ -1,3 +1,4 @@
+use crate::utils::component_utils::*;
 use vgtk::lib::gtk::*;
 use vgtk::{gtk, Component, UpdateAction, VNode};
 
@@ -48,7 +49,7 @@ impl Component for Notification {
                 <Box 
                     orientation=Orientation::Horizontal 
                     spacing=18 
-                    on realize=|b|{b.get_style_context().add_class("app-notification"); Message::None}>
+                    on realize=|b| class(b, "app-notification", Message::None)>
                         <Label 
                             Box::pack_type=PackType::Start 
                             Box::expand=false 
