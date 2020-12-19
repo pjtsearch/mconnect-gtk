@@ -7,9 +7,11 @@ use crate::mconnect_dbus::OrgMconnectDeviceShare;
 use crate::utils::device::Device;
 use crate::views::devices_list::DevicesList;
 use crate::views::main_window::share_file_btn::ShareFileBtn;
+use crate::views::main_window::notification::Notification;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
 use vgtk::lib::{gtk::*, gio::ApplicationFlags};
 mod share_file_btn;
+mod notification;
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
@@ -75,10 +77,16 @@ impl Component for MainWindow {
    type Properties = ();
 
    fn update(&mut self, message: Message) -> UpdateAction<Self> {
-        self.update_result(message).unwrap_or_else(|err| {
-            self.error = Some(err.to_string());
-            UpdateAction::Render
-        })
+        match self.update_result(message) {
+            Ok(action) => {
+                self.error = None;
+                action
+            }
+            Err(err) => {
+                self.error = Some(err.to_string());
+                UpdateAction::Render
+            }
+        }
    }
 
    fn create(_props: Self::Properties) -> Self {
@@ -114,16 +122,16 @@ impl Component for MainWindow {
                             <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
                         })} 
                     </HeaderBar>
-                    <Box>
-                        {gtk_if!(self.error.is_some() => {
-                            <Label text=self.error.clone().unwrap() />
-                        })}
-                        {gtk_if!(self.devices.is_some() => {
-                            <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
-                        })}
-                        {gtk_if!(self.selected_device.is_some() => {
-                            <@DeviceDisplay device=self.selected_device.clone().unwrap() />
-                        })}
+                    <Box orientation=Orientation::Vertical>
+                        <Box vexpand=true>
+                            {gtk_if!(self.devices.is_some() => {
+                                <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
+                            })}
+                            {gtk_if!(self.selected_device.is_some() => {
+                                <@DeviceDisplay device=self.selected_device.clone().unwrap() />
+                            })}
+                        </Box>
+                        <@Notification text=self.error.clone() />
                     </Box>
                </Window>
            </Application>
