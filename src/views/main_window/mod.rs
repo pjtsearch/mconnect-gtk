@@ -1,4 +1,5 @@
 // use crate::views::devices_list::DevicesList;
+use crate::utils::update_result::UpdateResult;
 use crate::utils::device_manager::DeviceManager;
 use crate::views::device_display::DeviceDisplay;
 use std::path::PathBuf;
@@ -27,8 +28,46 @@ pub enum Message {
    Refresh
 }
 
-impl MainWindow {
-    fn update_err(&mut self, err: dbus::Error) { self.error = Some(err.to_string()) }
+impl UpdateResult<Message> for MainWindow {
+    fn update_result(&mut self, message: Message) -> Result<UpdateAction<Self>, dbus::Error> {
+        match message {
+            Message::Exit => {
+               vgtk::quit();
+               Ok(UpdateAction::None)
+            }
+            Message::DeviceSelected(device) => {
+               self.selected_device = Some(device);
+               Ok(UpdateAction::Render)
+            }
+            Message::AllowSelected => {
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.allow()?;
+                    self.selected_device = Some(selected_device.refreshed()?);
+                }
+                Ok(UpdateAction::Render)
+            }
+            Message::DisallowSelected => {
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.disallow()?;
+                    self.selected_device = Some(selected_device.refreshed()?);
+                }
+                Ok(UpdateAction::Render)
+            }
+            Message::Refresh => {
+                self.devices = Some(DeviceManager.list_device_structs()?);
+                if let Some(selected_device) = self.selected_device.clone() {
+                    self.selected_device = Some(selected_device.refreshed()?);
+                }
+                Ok(UpdateAction::Render)
+            },
+            Message::ShareFile(file) => {
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.share_file(file.to_str().unwrap())?;
+                }
+                Ok(UpdateAction::Render)
+            }
+       }
+    }
 }
 
 impl Component for MainWindow {
@@ -36,43 +75,10 @@ impl Component for MainWindow {
    type Properties = ();
 
    fn update(&mut self, message: Message) -> UpdateAction<Self> {
-       match message {
-            Message::Exit => {
-               vgtk::quit();
-               UpdateAction::None
-            }
-            Message::DeviceSelected(device) => {
-               self.selected_device = Some(device);
-               UpdateAction::Render
-            }
-            Message::AllowSelected => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.allow();
-                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
-                }
-                UpdateAction::Render
-            }
-            Message::DisallowSelected => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.disallow();
-                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
-                }
-                UpdateAction::Render
-            }
-            Message::Refresh => {
-                self.devices = DeviceManager.list_device_structs().map_err(|e|self.update_err(e)).ok();
-                if let Some(selected_device) = self.selected_device.clone() {
-                    self.selected_device = selected_device.refreshed().map_err(|e|self.update_err(e)).ok();
-                }
-                UpdateAction::Render
-            },
-            Message::ShareFile(file) => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.share_file(file.to_str().unwrap());
-                }
-                UpdateAction::None
-            }
-       }
+        self.update_result(message).unwrap_or_else(|err| {
+            self.error = Some(err.to_string());
+            UpdateAction::Render
+        })
    }
 
    fn create(_props: Self::Properties) -> Self {
