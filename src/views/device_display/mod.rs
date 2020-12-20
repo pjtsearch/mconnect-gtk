@@ -12,6 +12,23 @@ pub enum Message {
 
 }
 
+impl DeviceDisplay {
+    pub fn battery_icon<'a>(&self) -> String {
+        let amount = match self.device.clone().battery_level {
+            l if l < 1 => "empty",
+            l if l < 15 => "caution",
+            l if l < 25 => "low",
+            l if l < 75 => "good",
+            _ => "full"
+        };
+        let charging = match self.device.clone().battery_charging {
+            true => "-charging",
+            false => ""
+        };
+        format!("battery-{}{}", amount, charging)
+    }
+}
+
 impl Component for DeviceDisplay {
     type Message = Message;
     type Properties = Self;
@@ -42,14 +59,10 @@ impl Component for DeviceDisplay {
                             DeviceType::Tablet => "phone"
                         }} pixel_size=75 />
                         <Label label=self.device.clone().name />
-                        <Label 
+                        <Image 
+                            property_icon_name=self.battery_icon()
                             Box::pack_type=PackType::End 
-                            label=format!("Battery {}: {}%",
-                                match self.device.clone().battery_charging {
-                                    true => "Charging",
-                                    false => "Discharging"
-                                },
-                                self.device.clone().battery_level.to_string())/>
+                            pixel_size=50 />
                     </Box>
                 </ListBoxRow>
             </ListBox>
