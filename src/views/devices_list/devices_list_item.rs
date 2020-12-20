@@ -34,9 +34,12 @@ impl Component for DevicesListItem {
     fn view(&self) -> VNode<Self> {
         gtk! {
             <ListBoxRow>
-                <Box orientation=Horizontal  margin_top=10 margin_bottom=10>
+                <Box orientation=Horizontal margin_top=10 margin_bottom=10>
+                    <Image property_icon_name={match self.device.is_connected {
+                        true => "emblem-ok-symbolic",
+                        false => "window-close-symbolic"
+                    }} Box::padding=10/>
                     <Label label=self.device.name.clone()></Label>
-                    <Label label=" Connected: ".to_string() + &self.device.is_connected.to_string()></Label>
                 </Box>
             </ListBoxRow>
         }
