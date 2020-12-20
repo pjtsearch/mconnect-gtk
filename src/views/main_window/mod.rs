@@ -2,17 +2,16 @@
 use crate::utils::update_result::UpdateResult;
 use crate::utils::device_manager::DeviceManager;
 use crate::views::device_display::DeviceDisplay;
-use std::path::PathBuf;
-use crate::mconnect_dbus::OrgMconnectDeviceShare;
 use crate::utils::device::Device;
 use crate::utils::component_utils::*;
 use crate::views::devices_list::DevicesList;
-use crate::views::main_window::share_file_btn::ShareFileBtn;
+use crate::views::main_window::header_device_controls::HeaderDeviceControls;
 use crate::views::main_window::notification::Notification;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
 use vgtk::lib::{gtk::*, gio::ApplicationFlags, gio::ApplicationExt};
 mod share_file_btn;
 mod notification;
+mod header_device_controls;
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {
@@ -25,10 +24,8 @@ pub struct MainWindow {
 pub enum Message {
    Exit,
    DeviceSelected(Device),
-   AllowSelected,
-   DisallowSelected,
-   ShareFile(PathBuf),
    Refresh,
+   UpdateError(Option<String>),
    None
 }
 
@@ -43,33 +40,17 @@ impl UpdateResult<Message> for MainWindow {
                self.selected_device = Some(device);
                Ok(UpdateAction::Render)
             }
-            Message::AllowSelected => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.allow()?;
-                    self.selected_device = Some(selected_device.refreshed()?);
-                }
-                Ok(UpdateAction::Render)
-            }
-            Message::DisallowSelected => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.disallow()?;
-                    self.selected_device = Some(selected_device.refreshed()?);
-                }
-                Ok(UpdateAction::Render)
-            }
             Message::Refresh => {
                 self.devices = Some(DeviceManager.list_device_structs()?);
                 if let Some(selected_device) = self.selected_device.clone() {
                     self.selected_device = Some(selected_device.refreshed()?);
                 }
                 Ok(UpdateAction::Render)
-            },
-            Message::ShareFile(file) => {
-                if let Some(selected_device) = self.selected_device.clone() {
-                    selected_device.share_file(file.to_str().unwrap())?;
-                }
+            }
+            Message::UpdateError(error) => {
+                self.error = error;
                 Ok(UpdateAction::Render)
-            },
+            }
             Message::None => Ok(UpdateAction::None)
        }
     }
@@ -114,17 +95,12 @@ impl Component for MainWindow {
                <Window on destroy=|_| Message::Exit>
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
-                        {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().allowed => {
-                            <Button HeaderBar::pack_type=PackType::End label="Disallow" on clicked=|_| Message::DisallowSelected />
-                        })}
-                        {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
-                            <Box HeaderBar::pack_type=PackType::End>
-                                <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
-                            </Box>
-                        })}
-                        {gtk_if!(self.selected_device.is_some() && !self.selected_device.clone().unwrap().allowed => {
-                            <Button label="Allow" HeaderBar::pack_type=PackType::End on clicked=|_| Message::AllowSelected />
-                        })} 
+                        <Box HeaderBar::pack_type=PackType::End>
+                            <@HeaderDeviceControls 
+                                selected_device=self.selected_device.clone() 
+                                on error=|e| Message::UpdateError(e)
+                                on selected_device_change=|_| Message::Refresh />
+                        </Box>
                     </HeaderBar>
                     <Box orientation=Orientation::Vertical>
                         <Box vexpand=true>
