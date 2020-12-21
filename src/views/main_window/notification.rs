@@ -10,7 +10,6 @@ pub struct Notification {
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    None,
     Close
 }
 
@@ -39,7 +38,6 @@ impl Component for Notification {
                 self.revealed = false;
                 UpdateAction::Render
             }
-            Message::None => UpdateAction::None
         }
     }
 
@@ -49,7 +47,7 @@ impl Component for Notification {
                 <Box 
                     orientation=Orientation::Horizontal 
                     spacing=18 
-                    on realize=|b| class(b, "app-notification", Message::None)>
+                    class=vec!["app-notification".to_owned()]>
                         <Label 
                             Box::pack_type=PackType::Start 
                             Box::expand=false 
