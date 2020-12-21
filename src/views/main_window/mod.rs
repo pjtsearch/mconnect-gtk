@@ -8,7 +8,7 @@ use crate::views::devices_list::DevicesList;
 use crate::views::main_window::header_device_controls::HeaderDeviceControls;
 use crate::views::main_window::notification::Notification;
 use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
-use vgtk::lib::{gtk::*, gio::ApplicationFlags, gio::ApplicationExt};
+use vgtk::lib::{gtk::*, gio::ApplicationFlags};
 mod share_file_btn;
 mod notification;
 mod header_device_controls;
@@ -25,8 +25,7 @@ pub enum Message {
    Exit,
    DeviceSelected(Device),
    Refresh,
-   UpdateError(Option<String>),
-   None
+   UpdateError(Option<String>)
 }
 
 impl UpdateResult<Message> for MainWindow {
@@ -51,7 +50,6 @@ impl UpdateResult<Message> for MainWindow {
                 self.error = error;
                 Ok(UpdateAction::Render)
             }
-            Message::None => Ok(UpdateAction::None)
        }
     }
 }
@@ -90,9 +88,8 @@ impl Component for MainWindow {
 
    fn view(&self) -> VNode<MainWindow> {
        gtk! {
-           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty()) 
-                on startup=|_| css(include_str!("main_window.css"), Message::None)>
-               <Window on destroy=|_| Message::Exit>
+           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty())>
+               <Window on destroy=|_| Message::Exit css=include_str!("main_window.css")>
                     <HeaderBar title="MConnect" show_close_button=true>
                         <Button image="view-refresh" on clicked=|_| Message::Refresh />
                         <Box HeaderBar::pack_type=PackType::End>
