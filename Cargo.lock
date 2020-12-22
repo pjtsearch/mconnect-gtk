@@ -795,6 +795,7 @@ version = "0.1.0"
 dependencies = [
  "dbus",
  "derive_builder",
+ "sass-rs",
  "vgtk",
 ]
 
@@ -809,6 +810,16 @@ name = "new_debug_unreachable"
 version = "1.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e4a24736216ec316047a1fc4252e27dabb04218aa4a3f37c6e7ddbf1f9782b54"
+
+[[package]]
+name = "num_cpus"
+version = "1.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "05499f3756671c15885fee9034446956fff3f243d6077b91e5767df161f766b3"
+dependencies = [
+ "hermit-abi",
+ "libc",
+]
 
 [[package]]
 name = "once_cell"
@@ -1014,6 +1025,28 @@ dependencies = [
  "blake2b_simd",
  "constant_time_eq",
  "crossbeam-utils",
+]
+
+[[package]]
+name = "sass-rs"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cabcf7c6e55053f359911187ac401409aad2dc14338cae972dec266fee486abd"
+dependencies = [
+ "libc",
+ "sass-sys",
+]
+
+[[package]]
+name = "sass-sys"
+version = "0.4.21"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0df9ac0fd0b8d62a99b9948094dcd56c441e3e10bf49f9b12da40b2183804908"
+dependencies = [
+ "cc",
+ "libc",
+ "num_cpus",
+ "pkg-config",
 ]
 
 [[package]]
