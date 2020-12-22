@@ -65,6 +65,24 @@ impl Component for DeviceDisplay {
                             pixel_size=50 />
                     </Box>
                 </ListBoxRow>
+                <ListBoxRow>
+                    <Box margin_end=20 margin_start=20 margin_top=20 margin_bottom=20>
+                        <Label label="ID" Box::pack_type=PackType::Start />
+                        <Label label=self.device.clone().id Box::pack_type=PackType::End />
+                    </Box>
+                </ListBoxRow>
+                <ListBoxRow>
+                    <Box margin_end=20 margin_start=20 margin_top=20 margin_bottom=20>
+                        <Label label="Protocol Version" Box::pack_type=PackType::Start />
+                        <Label label=self.device.clone().protocol_version.to_string() Box::pack_type=PackType::End />
+                    </Box>
+                </ListBoxRow>
+                <ListBoxRow>
+                    <Box margin_end=20 margin_start=20 margin_top=20 margin_bottom=20>
+                        <Label label="Address" Box::pack_type=PackType::Start />
+                        <Label label=self.device.clone().address Box::pack_type=PackType::End />
+                    </Box>
+                </ListBoxRow>
             </ListBox>
         }
     }
