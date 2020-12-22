@@ -1,6 +1,7 @@
 use vgtk::lib::gtk::*;
 use vgtk::lib::{gdk::Screen, glib::IsA, glib::GString};
 
+#[allow(clippy::ptr_arg)]
 pub trait CSSWidget {
     fn set_class(&self, classes:&Vec<String>);
     fn get_class(&self) -> Vec<String>;
