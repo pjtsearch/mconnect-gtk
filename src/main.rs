@@ -3,12 +3,12 @@
 extern crate derive_builder;
 
 use vgtk::run;
-use crate::views::MainWindow;
+use crate::views::App;
 
 mod views;
 mod utils;
 mod mconnect_dbus;
 
 fn main() {
-    std::process::exit(run::<MainWindow>());
+    std::process::exit(run::<App>());
 }

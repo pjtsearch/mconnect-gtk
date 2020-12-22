@@ -3,12 +3,11 @@ use crate::utils::update_result::UpdateResult;
 use crate::utils::device_manager::DeviceManager;
 use crate::views::device_display::DeviceDisplay;
 use crate::utils::device::Device;
-use crate::utils::component_utils::*;
 use crate::views::devices_list::DevicesList;
 use crate::views::main_window::header_device_controls::HeaderDeviceControls;
 use crate::views::main_window::notification::Notification;
-use vgtk::{ext::*, gtk, gtk_if, Component, UpdateAction, VNode};
-use vgtk::lib::{gtk::*, gio::ApplicationFlags};
+use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
+use vgtk::lib::gtk::*;
 mod share_file_btn;
 mod notification;
 mod header_device_controls;
@@ -88,30 +87,28 @@ impl Component for MainWindow {
 
    fn view(&self) -> VNode<MainWindow> {
        gtk! {
-           <Application::new_unwrap(Some("com.pjtsearch.mconnect-vgtk"), ApplicationFlags::empty())>
-               <Window on destroy=|_| Message::Exit css=include_str!("main_window.css")>
-                    <HeaderBar title="MConnect" show_close_button=true>
-                        <Button image="view-refresh" on clicked=|_| Message::Refresh />
-                        <Box HeaderBar::pack_type=PackType::End>
-                            <@HeaderDeviceControls 
-                                selected_device=self.selected_device.clone() 
-                                on error=|e| Message::UpdateError(e)
-                                on selected_device_change=|_| Message::Refresh />
-                        </Box>
-                    </HeaderBar>
-                    <Box orientation=Orientation::Vertical>
-                        <Box vexpand=true>
-                            {gtk_if!(self.devices.is_some() => {
-                                <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
-                            })}
-                            {gtk_if!(self.selected_device.is_some() => {
-                                <@DeviceDisplay device=self.selected_device.clone().unwrap() />
-                            })}
-                        </Box>
-                        <@Notification text=self.error.clone() />
+            <Window on destroy=|_| Message::Exit>
+                <HeaderBar title="MConnect" show_close_button=true>
+                    <Button image="view-refresh" on clicked=|_| Message::Refresh />
+                    <Box HeaderBar::pack_type=PackType::End>
+                        <@HeaderDeviceControls 
+                            selected_device=self.selected_device.clone() 
+                            on error=|e| Message::UpdateError(e)
+                            on selected_device_change=|_| Message::Refresh />
                     </Box>
-               </Window>
-           </Application>
+                </HeaderBar>
+                <Box orientation=Orientation::Vertical>
+                    <Box vexpand=true>
+                        {gtk_if!(self.devices.is_some() => {
+                            <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
+                        })}
+                        {gtk_if!(self.selected_device.is_some() => {
+                            <@DeviceDisplay device=self.selected_device.clone().unwrap() />
+                        })}
+                    </Box>
+                    <@Notification text=self.error.clone() />
+                </Box>
+            </Window>
        }
    }
 }
