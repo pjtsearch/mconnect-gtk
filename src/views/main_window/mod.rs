@@ -103,7 +103,9 @@ impl Component for MainWindow {
                             <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
                         })}
                         {gtk_if!(self.selected_device.is_some() => {
-                            <@DeviceDisplay device=self.selected_device.clone().unwrap() />
+                            <ScrolledWindow>
+                                <@DeviceDisplay device=self.selected_device.clone().unwrap() />
+                            </ScrolledWindow>
                         })}
                     </Box>
                     <@Notification text=self.error.clone() />
