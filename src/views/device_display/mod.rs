@@ -83,6 +83,24 @@ impl Component for DeviceDisplay {
                         <Label label=self.device.clone().address Box::pack_type=PackType::End />
                     </Box>
                 </ListBoxRow>
+                <ListBoxRow>
+                    <Expander margin_end=20 margin_start=20 margin_top=20 margin_bottom=20 label="Incoming Capabilities">
+                        <Box orientation=Orientation::Vertical>    
+                            {self.device.clone().incoming_capabilities.iter().map(|cap| gtk!{
+                                <Label label=cap.clone() halign=Align::Start />
+                            })}
+                        </Box>
+                    </Expander>
+                </ListBoxRow>
+                <ListBoxRow>
+                    <Expander margin_end=20 margin_start=20 margin_top=20 margin_bottom=20 label="Outgoing Capabilities">
+                        <Box orientation=Orientation::Vertical>    
+                            {self.device.clone().outgoing_capabilities.iter().map(|cap| gtk!{
+                                <Label label=cap.clone() halign=Align::Start />
+                            })}
+                        </Box>
+                    </Expander>
+                </ListBoxRow>
             </ListBox>
         }
     }
