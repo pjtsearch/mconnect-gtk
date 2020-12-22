@@ -6,5 +6,6 @@
         "hexpand",
         "relm",
         "vgtk"
-    ]
+    ],
+    "rust-analyzer.checkOnSave.command": "clippy"
 }

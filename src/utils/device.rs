@@ -36,7 +36,7 @@ pub struct Device {
 }
 
 impl DeviceBuilder {
-    pub fn from_proxy<'a, T: BlockingSender, C: ::std::ops::Deref<Target=T>>(&mut self, path: PathBuf, device: Proxy<C>) -> &mut DeviceBuilder {
+    pub fn from_proxy<T: BlockingSender, C: ::std::ops::Deref<Target=T>>(&mut self, path: PathBuf, device: Proxy<C>) -> &mut DeviceBuilder {
         self.id = device.id().ok();
         self.path = Some(path);
         self.name = device.name().ok();
@@ -46,7 +46,7 @@ impl DeviceBuilder {
             "tablet" => DeviceType::Tablet,
             _ => DeviceType::default()
         });
-        self.protocol_version = device.protocol_version().ok().map(|p|i64::from(p));
+        self.protocol_version = device.protocol_version().ok().map(i64::from);
         self.address = device.address().ok();
         self.is_paired = device.is_paired().ok();
         self.allowed = device.allowed().ok();
@@ -56,9 +56,9 @@ impl DeviceBuilder {
         self.outgoing_capabilities = device.outgoing_capabilities().ok();
         self.certificate = OrgMconnectDevice::certificate(&device).ok();
         self.certificate_fingerprint = device.certificate_fingerprint().ok();
-        self.battery_level = device.level().ok().map(|p|i64::from(p));
+        self.battery_level = device.level().ok().map(i64::from);
         self.battery_charging = device.charging().ok();
-        return self;
+        self
     }
 }
 

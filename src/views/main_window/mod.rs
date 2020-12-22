@@ -22,7 +22,7 @@ pub struct MainWindow {
 #[derive(Clone, Debug)]
 pub enum Message {
    Exit,
-   DeviceSelected(Device),
+   DeviceSelected(std::boxed::Box<Device>),
    Refresh,
    UpdateError(Option<String>)
 }
@@ -35,7 +35,7 @@ impl UpdateResult<Message> for MainWindow {
                Ok(UpdateAction::None)
             }
             Message::DeviceSelected(device) => {
-               self.selected_device = Some(device);
+               self.selected_device = Some(device.as_ref().clone());
                Ok(UpdateAction::Render)
             }
             Message::Refresh => {
@@ -100,7 +100,7 @@ impl Component for MainWindow {
                 <Box orientation=Orientation::Vertical>
                     <Box vexpand=true>
                         {gtk_if!(self.devices.is_some() => {
-                            <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(d)/>
+                            <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(std::boxed::Box::new(d))/>
                         })}
                         {gtk_if!(self.selected_device.is_some() => {
                             <ScrolledWindow>

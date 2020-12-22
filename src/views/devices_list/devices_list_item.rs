@@ -25,10 +25,8 @@ impl Component for DevicesListItem {
         UpdateAction::Render
     }
 
-    fn update(&mut self, event: Message) -> UpdateAction<Self> {
-        match event {
-            _ => UpdateAction::None
-        }
+    fn update(&mut self, _event: Message) -> UpdateAction<Self> {
+        UpdateAction::None
     }
 
     fn view(&self) -> VNode<Self> {

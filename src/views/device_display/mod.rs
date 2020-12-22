@@ -13,7 +13,7 @@ pub enum Message {
 }
 
 impl DeviceDisplay {
-    pub fn battery_icon<'a>(&self) -> String {
+    pub fn battery_icon(&self) -> String {
         let amount = match self.device.clone().battery_level {
             l if l < 1 => "empty",
             l if l < 15 => "caution",
