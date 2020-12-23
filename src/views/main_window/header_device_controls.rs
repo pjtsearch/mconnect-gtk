@@ -1,8 +1,7 @@
-use crate::components::input_btn::InputBtn;
+use crate::components::{file_btn::FileBtn, input_btn::InputBtn};
 use crate::mconnect_dbus::OrgMconnectDeviceShare;
 use crate::utils::device::Device;
 use crate::utils::update_result::UpdateResult;
-use crate::views::main_window::share_file_btn::ShareFileBtn;
 use std::path::PathBuf;
 use vgtk::lib::gtk::*;
 use vgtk::Callback;
@@ -97,7 +96,7 @@ impl Component for HeaderDeviceControls {
                 })}
                 {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
                     <Box>
-                        <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
+                        <@FileBtn label="Share File" on selected=|file| Message::ShareFile(file) />
                         <@InputBtn label="Share Text" on input=|input| Message::ShareText(input) />
                         <@InputBtn label="Share URL" on input=|input| Message::ShareURL(input) />
                     </Box>

@@ -10,7 +10,6 @@ use vgtk::lib::gtk::*;
 use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
 mod header_device_controls;
 mod notification;
-mod share_file_btn;
 
 #[derive(Clone, Default, Debug)]
 pub struct MainWindow {

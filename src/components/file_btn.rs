@@ -4,8 +4,9 @@ use vgtk::Callback;
 use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
-pub struct ShareFileBtn {
+pub struct FileBtn {
     pub on_selected: Callback<PathBuf>,
+    pub label: String,
 }
 
 #[derive(Clone, Debug)]
@@ -13,7 +14,7 @@ pub enum Message {
     OpenDialog,
 }
 
-impl Component for ShareFileBtn {
+impl Component for FileBtn {
     type Message = Message;
     type Properties = Self;
 
@@ -52,7 +53,7 @@ impl Component for ShareFileBtn {
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <Button label="Share File" on clicked=|_| Message::OpenDialog />
+            <Button label=self.label.clone() on clicked=|_| Message::OpenDialog />
         }
     }
 }
