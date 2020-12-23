@@ -13,7 +13,7 @@ pub struct InputBtn {
 #[derive(Clone, Debug)]
 pub enum Message {
     ToggleInput,
-    Enter(String)
+    Enter(String),
 }
 
 impl Component for InputBtn {

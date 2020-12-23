@@ -5,10 +5,10 @@ extern crate derive_builder;
 use crate::views::App;
 use vgtk::run;
 
+mod components;
 mod mconnect_dbus;
 mod utils;
 mod views;
-mod components;
 
 fn main() {
     std::process::exit(run::<App>());
