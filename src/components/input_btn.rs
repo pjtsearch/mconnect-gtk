@@ -1,6 +1,6 @@
 use vgtk::lib::gtk::*;
 use vgtk::Callback;
-use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
+use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct InputBtn {
@@ -47,11 +47,9 @@ impl Component for InputBtn {
         gtk! {
             <Box>
                 <Button label=self.label.clone() on clicked=|_| Message::ToggleInput />
-                {gtk_if!(self.input_open => {
-                    <Box>
-                        <Entry on activate=|e| Message::Enter(e.get_text().to_string()) />
-                    </Box>
-                })}
+                <Revealer reveal_child=self.input_open transition_type=RevealerTransitionType::SlideLeft>
+                    <Entry on activate=|e| Message::Enter(e.get_text().to_string()) />
+                </Revealer>
             </Box>
         }
     }
