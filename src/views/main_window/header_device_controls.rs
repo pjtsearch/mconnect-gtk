@@ -1,3 +1,4 @@
+use crate::components::input_btn::InputBtn;
 use crate::mconnect_dbus::OrgMconnectDeviceShare;
 use crate::utils::device::Device;
 use crate::utils::update_result::UpdateResult;
@@ -19,6 +20,8 @@ pub enum Message {
     AllowSelected,
     DisallowSelected,
     ShareFile(PathBuf),
+    ShareText(String),
+    ShareURL(String),
 }
 
 impl UpdateResult<Message> for HeaderDeviceControls {
@@ -41,6 +44,18 @@ impl UpdateResult<Message> for HeaderDeviceControls {
             Message::ShareFile(file) => {
                 if let Some(selected_device) = self.selected_device.clone() {
                     selected_device.share_file(file.to_str().unwrap())?;
+                }
+                Ok(UpdateAction::Render)
+            }
+            Message::ShareText(text) => {
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.share_text(&text)?;
+                }
+                Ok(UpdateAction::Render)
+            }
+            Message::ShareURL(url) => {
+                if let Some(selected_device) = self.selected_device.clone() {
+                    selected_device.share_url(&url)?;
                 }
                 Ok(UpdateAction::Render)
             }
@@ -83,6 +98,8 @@ impl Component for HeaderDeviceControls {
                 {gtk_if!(self.selected_device.is_some() && self.selected_device.clone().unwrap().is_connected => {
                     <Box>
                         <@ShareFileBtn on selected=|file| Message::ShareFile(file) />
+                        <@InputBtn label="Share Text" on input=|input| Message::ShareText(input) />
+                        <@InputBtn label="Share URL" on input=|input| Message::ShareURL(input) />
                     </Box>
                 })}
             </Box>
