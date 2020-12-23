@@ -98,12 +98,12 @@ impl Component for MainWindow {
                     </Box>
                 </HeaderBar>
                 <Box orientation=Orientation::Vertical>
-                    <Box vexpand=true>
+                    <Box vexpand=true hexpand=true>
                         {gtk_if!(self.devices.is_some() => {
                             <@DevicesList devices=self.devices.clone().unwrap() on device_selected=|d| Message::DeviceSelected(std::boxed::Box::new(d))/>
                         })}
                         {gtk_if!(self.selected_device.is_some() => {
-                            <ScrolledWindow>
+                            <ScrolledWindow hexpand=true>
                                 <@DeviceDisplay device=self.selected_device.clone().unwrap() />
                             </ScrolledWindow>
                         })}

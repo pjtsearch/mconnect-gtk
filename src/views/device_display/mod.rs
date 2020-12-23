@@ -50,7 +50,7 @@ impl Component for DeviceDisplay {
 
     fn view(&self) -> VNode<Self> {
         gtk! {
-            <ListBox margin_start=20 margin_end=20 margin_top=20 hexpand=true>
+            <ListBox>
                 <ListBoxRow>
                     <Box orientation=Orientation::Horizontal margin_start=5 margin_end=20>
                         <Image property_icon_name={match self.device.device_type {
