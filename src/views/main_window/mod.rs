@@ -88,7 +88,7 @@ impl Component for MainWindow {
         gtk! {
              <Window on destroy=|_| Message::Exit>
                  <HeaderBar title="MConnect" show_close_button=true>
-                     <Button image="view-refresh" on clicked=|_| Message::Refresh />
+                     <Button image="view-refresh-symbolic" on clicked=|_| Message::Refresh />
                      <Box HeaderBar::pack_type=PackType::End>
                          <@HeaderDeviceControls
                              selected_device=self.selected_device.clone()
