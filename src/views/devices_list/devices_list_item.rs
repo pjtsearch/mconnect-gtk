@@ -1,5 +1,5 @@
 use crate::utils::device::Device;
-use vgtk::lib::gtk::{*, Orientation::Horizontal};
+use vgtk::lib::gtk::{Orientation::Horizontal, *};
 use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
@@ -8,9 +8,7 @@ pub struct DevicesListItem {
 }
 
 #[derive(Clone, Debug)]
-pub enum Message {
-
-}
+pub enum Message {}
 
 impl Component for DevicesListItem {
     type Message = Message;
@@ -42,5 +40,4 @@ impl Component for DevicesListItem {
             </ListBoxRow>
         }
     }
-
 }

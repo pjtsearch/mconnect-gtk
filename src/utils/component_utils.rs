@@ -1,27 +1,31 @@
 use vgtk::lib::gtk::*;
-use vgtk::lib::{gdk::Screen, glib::IsA, glib::GString};
+use vgtk::lib::{gdk::Screen, glib::GString, glib::IsA};
 
 #[allow(clippy::ptr_arg)]
 pub trait CSSWidget {
-    fn set_class(&self, classes:&Vec<String>);
+    fn set_class(&self, classes: &Vec<String>);
     fn get_class(&self) -> Vec<String>;
 }
 
 impl<O: IsA<Widget>> CSSWidget for O {
     fn set_class(&self, classes: &Vec<String>) {
         classes.iter().for_each(|class| {
-            if !self.get_style_context().has_class(&class){
+            if !self.get_style_context().has_class(&class) {
                 self.get_style_context().add_class(&class);
             }
         });
     }
     fn get_class(&self) -> Vec<String> {
-        self.get_style_context().list_classes().iter().map(|e|e.to_string()).collect()
+        self.get_style_context()
+            .list_classes()
+            .iter()
+            .map(|e| e.to_string())
+            .collect()
     }
 }
 
 pub trait CSSApplication {
-    fn set_css(&self, style:GString);
+    fn set_css(&self, style: GString);
     fn get_css(&self) -> GString;
 }
 

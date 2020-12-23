@@ -1,17 +1,22 @@
-use crate::utils::conn_util::{ConnVariant, with_conn};
+use crate::mconnect_dbus::{
+    OrgMconnectDevice, OrgMconnectDeviceBattery, OrgMconnectDeviceManager, OrgMconnectDeviceShare,
+    OrgMconnectDeviceTelephony,
+};
+use crate::utils::conn_util::{with_conn, ConnVariant};
 use dbus::blocking::{BlockingSender, Proxy};
-use crate::mconnect_dbus::{OrgMconnectDevice, OrgMconnectDeviceBattery, OrgMconnectDeviceShare, OrgMconnectDeviceTelephony, OrgMconnectDeviceManager};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone)]
 pub enum DeviceType {
     Phone,
     Desktop,
-    Tablet
+    Tablet,
 }
 
 impl Default for DeviceType {
-    fn default() -> Self { Self::Phone }
+    fn default() -> Self {
+        Self::Phone
+    }
 }
 
 #[derive(Default, Builder, Debug, Clone)]
@@ -32,20 +37,27 @@ pub struct Device {
     pub certificate: String,
     pub certificate_fingerprint: String,
     pub battery_level: i64,
-    pub battery_charging: bool
+    pub battery_charging: bool,
 }
 
 impl DeviceBuilder {
-    pub fn from_proxy<T: BlockingSender, C: ::std::ops::Deref<Target=T>>(&mut self, path: PathBuf, device: Proxy<C>) -> &mut DeviceBuilder {
+    pub fn from_proxy<T: BlockingSender, C: ::std::ops::Deref<Target = T>>(
+        &mut self,
+        path: PathBuf,
+        device: Proxy<C>,
+    ) -> &mut DeviceBuilder {
         self.id = device.id().ok();
         self.path = Some(path);
         self.name = device.name().ok();
-        self.device_type = device.device_type().ok().map(|d_type| match &d_type as &str {
-            "phone" => DeviceType::Phone,
-            "desktop" => DeviceType::Desktop,
-            "tablet" => DeviceType::Tablet,
-            _ => DeviceType::default()
-        });
+        self.device_type = device
+            .device_type()
+            .ok()
+            .map(|d_type| match &d_type as &str {
+                "phone" => DeviceType::Phone,
+                "desktop" => DeviceType::Desktop,
+                "tablet" => DeviceType::Tablet,
+                _ => DeviceType::default(),
+            });
         self.protocol_version = device.protocol_version().ok().map(i64::from);
         self.address = device.address().ok();
         self.is_paired = device.is_paired().ok();
@@ -64,46 +76,55 @@ impl DeviceBuilder {
 
 impl Device {
     pub fn refreshed(&self) -> Result<Device, dbus::Error> {
-        with_conn(
-            ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| DeviceBuilder::default().from_proxy(self.path.clone(), p).build().unwrap())
+        with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
+            DeviceBuilder::default()
+                .from_proxy(self.path.clone(), p)
+                .build()
+                .unwrap()
+        })
     }
 
     pub fn allow(&self) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::DeviceManager, 
-            |p| p.allow_device(&self.path.to_string_lossy())).and_then(|e| e)
+        with_conn(ConnVariant::DeviceManager, |p| {
+            p.allow_device(&self.path.to_string_lossy())
+        })
+        .and_then(|e| e)
     }
 
     pub fn disallow(&self) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::DeviceManager, 
-            |p| p.disallow_device(&self.path.to_string_lossy())).and_then(|e| e)
+        with_conn(ConnVariant::DeviceManager, |p| {
+            p.disallow_device(&self.path.to_string_lossy())
+        })
+        .and_then(|e| e)
     }
 }
 
 impl OrgMconnectDeviceShare for Device {
     fn share_file(&self, path: &str) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_file(path)).and_then(|e| e)
+        with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
+            p.share_file(path)
+        })
+        .and_then(|e| e)
     }
     fn share_url(&self, url: &str) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_url(url)).and_then(|e| e)
+        with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
+            p.share_url(url)
+        })
+        .and_then(|e| e)
     }
     fn share_text(&self, text: &str) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.share_text(text)).and_then(|e| e)
+        with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
+            p.share_text(text)
+        })
+        .and_then(|e| e)
     }
 }
 
 impl OrgMconnectDeviceTelephony for Device {
     fn send_sms(&self, number: &str, message: &str) -> Result<(), dbus::Error> {
-        with_conn(
-            ConnVariant::Device(&self.path.to_string_lossy()), 
-            |p| p.send_sms(number, message)).and_then(|e| e)
+        with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
+            p.send_sms(number, message)
+        })
+        .and_then(|e| e)
     }
 }

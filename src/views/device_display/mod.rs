@@ -4,13 +4,11 @@ use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct DeviceDisplay {
-    pub device: Device
+    pub device: Device,
 }
 
 #[derive(Clone, Debug)]
-pub enum Message {
-
-}
+pub enum Message {}
 
 impl DeviceDisplay {
     pub fn battery_icon(&self) -> String {
@@ -19,11 +17,11 @@ impl DeviceDisplay {
             l if l < 15 => "caution",
             l if l < 25 => "low",
             l if l < 75 => "good",
-            _ => "full"
+            _ => "full",
         };
         let charging = match self.device.clone().battery_charging {
             true => "-charging",
-            false => ""
+            false => "",
         };
         format!("battery-{}{}", amount, charging)
     }
@@ -43,9 +41,7 @@ impl Component for DeviceDisplay {
     }
 
     fn update(&mut self, event: Message) -> UpdateAction<Self> {
-        match event {
-
-        }
+        match event {}
     }
 
     fn view(&self) -> VNode<Self> {
@@ -59,9 +55,9 @@ impl Component for DeviceDisplay {
                             DeviceType::Tablet => "phone"
                         }} pixel_size=75 />
                         <Label label=self.device.clone().name />
-                        <Image 
+                        <Image
                             property_icon_name=self.battery_icon()
-                            Box::pack_type=PackType::End 
+                            Box::pack_type=PackType::End
                             pixel_size=50 />
                     </Box>
                 </ListBoxRow>
@@ -85,7 +81,7 @@ impl Component for DeviceDisplay {
                 </ListBoxRow>
                 <ListBoxRow>
                     <Expander margin_end=20 margin_start=20 margin_top=20 margin_bottom=20 label="Incoming Capabilities">
-                        <Box orientation=Orientation::Vertical>    
+                        <Box orientation=Orientation::Vertical>
                             {self.device.clone().incoming_capabilities.iter().map(|cap| gtk!{
                                 <Label label=cap.clone() halign=Align::Start />
                             })}
@@ -94,7 +90,7 @@ impl Component for DeviceDisplay {
                 </ListBoxRow>
                 <ListBoxRow>
                     <Expander margin_end=20 margin_start=20 margin_top=20 margin_bottom=20 label="Outgoing Capabilities">
-                        <Box orientation=Orientation::Vertical>    
+                        <Box orientation=Orientation::Vertical>
                             {self.device.clone().outgoing_capabilities.iter().map(|cap| gtk!{
                                 <Label label=cap.clone() halign=Align::Start />
                             })}
@@ -104,5 +100,4 @@ impl Component for DeviceDisplay {
             </ListBox>
         }
     }
-
 }

@@ -5,12 +5,12 @@ use vgtk::{gtk, Component, UpdateAction, VNode};
 #[derive(Clone, Debug, Default)]
 pub struct Notification {
     revealed: bool,
-    pub text: Option<String>
+    pub text: Option<String>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    Close
+    Close,
 }
 
 impl Component for Notification {
@@ -44,22 +44,22 @@ impl Component for Notification {
     fn view(&self) -> VNode<Self> {
         gtk! {
             <Revealer valign=Align::Start halign=Align::Center reveal_child=self.revealed>
-                <Box 
-                    orientation=Orientation::Horizontal 
-                    spacing=18 
+                <Box
+                    orientation=Orientation::Horizontal
+                    spacing=18
                     class=vec!["app-notification".to_owned()]>
-                        <Label 
-                            Box::pack_type=PackType::Start 
-                            Box::expand=false 
-                            Box::fill=true 
+                        <Label
+                            Box::pack_type=PackType::Start
+                            Box::expand=false
+                            Box::fill=true
                             Box::padding=18
                             text=self.text.clone().unwrap_or_default()/>
-                        <Button 
-                            Box::pack_type=PackType::Start 
-                            Box::expand=false 
-                            Box::fill=true 
+                        <Button
+                            Box::pack_type=PackType::Start
+                            Box::expand=false
+                            Box::fill=true
                             Box::padding=18
-                            image="window-close-symbolic" 
+                            image="window-close-symbolic"
                             relief=ReliefStyle::None
                             receives_default=true
                             on clicked=|_| Message::Close/>
@@ -67,5 +67,4 @@ impl Component for Notification {
             </Revealer>
         }
     }
-
 }

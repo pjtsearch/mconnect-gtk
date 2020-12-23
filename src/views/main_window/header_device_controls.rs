@@ -1,24 +1,24 @@
-use vgtk::Callback;
-use crate::utils::update_result::UpdateResult;
-use std::path::PathBuf;
-use crate::views::main_window::share_file_btn::ShareFileBtn;
-use crate::utils::device::Device;
 use crate::mconnect_dbus::OrgMconnectDeviceShare;
+use crate::utils::device::Device;
+use crate::utils::update_result::UpdateResult;
+use crate::views::main_window::share_file_btn::ShareFileBtn;
+use std::path::PathBuf;
 use vgtk::lib::gtk::*;
+use vgtk::Callback;
 use vgtk::{gtk, gtk_if, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct HeaderDeviceControls {
     pub selected_device: Option<Device>,
     pub on_error: Callback<Option<String>>,
-    pub on_selected_device_change: Callback<()>
+    pub on_selected_device_change: Callback<()>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
     AllowSelected,
     DisallowSelected,
-    ShareFile(PathBuf)
+    ShareFile(PathBuf),
 }
 
 impl UpdateResult<Message> for HeaderDeviceControls {
@@ -69,7 +69,7 @@ impl Component for HeaderDeviceControls {
                 UpdateAction::Render
             }
         }
-   }
+    }
 
     fn view(&self) -> VNode<Self> {
         gtk! {
@@ -88,5 +88,4 @@ impl Component for HeaderDeviceControls {
             </Box>
         }
     }
-
 }

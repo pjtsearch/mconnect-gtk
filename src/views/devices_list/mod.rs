@@ -1,9 +1,9 @@
-use vgtk::Callback;
 use crate::utils::device::Device;
 use crate::views::devices_list::devices_list_item::DevicesListItem;
-use vgtk::lib::gtk::*;
-use vgtk::{gtk, Component, UpdateAction, VNode};
 use std::convert::TryFrom;
+use vgtk::lib::gtk::*;
+use vgtk::Callback;
+use vgtk::{gtk, Component, UpdateAction, VNode};
 
 use self::DevicesListMessage::*;
 
@@ -11,13 +11,13 @@ mod devices_list_item;
 
 #[derive(Clone, Debug)]
 pub enum DevicesListMessage {
-    RowSelected(Option<i32>)
+    RowSelected(Option<i32>),
 }
 
 #[derive(Clone, Debug, Default)]
 pub struct DevicesList {
     pub devices: Vec<Device>,
-    pub on_device_selected: Callback<Device>
+    pub on_device_selected: Callback<Device>,
 }
 
 impl Component for DevicesList {

@@ -1,16 +1,16 @@
-use vgtk::Callback;
 use std::path::PathBuf;
 use vgtk::lib::gtk::*;
+use vgtk::Callback;
 use vgtk::{gtk, Component, UpdateAction, VNode};
 
 #[derive(Clone, Debug, Default)]
 pub struct ShareFileBtn {
-    pub on_selected: Callback<PathBuf>
+    pub on_selected: Callback<PathBuf>,
 }
 
 #[derive(Clone, Debug)]
 pub enum Message {
-    OpenDialog
+    OpenDialog,
 }
 
 impl Component for ShareFileBtn {
@@ -33,7 +33,10 @@ impl Component for ShareFileBtn {
                     Some("Open File"),
                     None,
                     FileChooserAction::Open,
-                    &[("_Cancel", ResponseType::Cancel), ("_Open", ResponseType::Accept)]
+                    &[
+                        ("_Cancel", ResponseType::Cancel),
+                        ("_Open", ResponseType::Accept),
+                    ],
                 );
                 let result = dialog.run();
                 if result == ResponseType::Accept {
@@ -52,5 +55,4 @@ impl Component for ShareFileBtn {
             <Button label="Share File" on clicked=|_| Message::OpenDialog />
         }
     }
-
 }
