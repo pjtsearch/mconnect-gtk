@@ -38,6 +38,7 @@ impl Component for InputBtn {
             Message::Enter(input) => {
                 self.on_input.send(input);
                 self.input_open = false;
+                self.input = Some("".to_owned());
                 UpdateAction::Render
             }
         }
@@ -48,7 +49,7 @@ impl Component for InputBtn {
             <Box>
                 <Button label=self.label.clone() on clicked=|_| Message::ToggleInput />
                 <Revealer reveal_child=self.input_open transition_type=RevealerTransitionType::SlideLeft>
-                    <Entry on activate=|e| Message::Enter(e.get_text().to_string()) />
+                    <Entry text=self.input.clone().unwrap_or("".to_owned()) on activate=|e| Message::Enter(e.get_text().to_string()) />
                 </Revealer>
             </Box>
         }
