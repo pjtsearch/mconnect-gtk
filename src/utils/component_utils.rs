@@ -1,9 +1,12 @@
 use vgtk::lib::gtk::*;
 use vgtk::lib::{gdk::Screen, glib::GString, glib::IsA};
 
+/// A trait for widgets that have CSS classes
 #[allow(clippy::ptr_arg)]
 pub trait CSSWidget {
+    /// Sets the CSS classes
     fn set_class(&self, classes: &Vec<String>);
+    /// Gets the CSS classes
     fn get_class(&self) -> Vec<String>;
 }
 
@@ -24,8 +27,11 @@ impl<O: IsA<Widget>> CSSWidget for O {
     }
 }
 
+/// Trait for an Application that can have CSS
 pub trait CSSApplication {
+    /// Sets the CSS
     fn set_css(&self, style: GString);
+    /// Gets the CSS
     fn get_css(&self) -> GString;
 }
 

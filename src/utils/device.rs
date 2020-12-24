@@ -6,6 +6,7 @@ use crate::utils::conn_util::{with_conn, ConnVariant};
 use dbus::blocking::{BlockingSender, Proxy};
 use std::path::PathBuf;
 
+/// An enum representing the types of mconnect devices
 #[derive(Debug, Clone)]
 pub enum DeviceType {
     Phone,
@@ -19,6 +20,7 @@ impl Default for DeviceType {
     }
 }
 
+/// A struct representing an mconnect device
 #[derive(Default, Builder, Debug, Clone)]
 #[builder(setter(into))]
 pub struct Device {
@@ -41,6 +43,7 @@ pub struct Device {
 }
 
 impl DeviceBuilder {
+    /// Creates a DeviceBuilder from a [Proxy]
     pub fn from_proxy<T: BlockingSender, C: ::std::ops::Deref<Target = T>>(
         &mut self,
         path: PathBuf,
@@ -75,6 +78,7 @@ impl DeviceBuilder {
 }
 
 impl Device {
+    /// Returns a refreshed version of this device
     pub fn refreshed(&self) -> Result<Device, dbus::Error> {
         with_conn(ConnVariant::Device(&self.path.to_string_lossy()), |p| {
             DeviceBuilder::default()
@@ -84,6 +88,7 @@ impl Device {
         })
     }
 
+    /// Allows this device
     pub fn allow(&self) -> Result<(), dbus::Error> {
         with_conn(ConnVariant::DeviceManager, |p| {
             p.allow_device(&self.path.to_string_lossy())
@@ -91,6 +96,7 @@ impl Device {
         .and_then(|e| e)
     }
 
+    /// Disallows this device
     pub fn disallow(&self) -> Result<(), dbus::Error> {
         with_conn(ConnVariant::DeviceManager, |p| {
             p.disallow_device(&self.path.to_string_lossy())

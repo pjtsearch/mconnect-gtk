@@ -3,6 +3,7 @@ use crate::utils::conn_util::{with_conn, ConnVariant};
 use crate::utils::device::{Device, DeviceBuilder};
 use std::path::PathBuf;
 
+/// An interface to the mconnect dbus device manager
 pub struct DeviceManager;
 
 impl OrgMconnectDeviceManager for DeviceManager {

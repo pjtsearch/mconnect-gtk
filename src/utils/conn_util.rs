@@ -1,11 +1,13 @@
 use dbus::Error;
 use std::time::Duration;
 
+/// n enum representing endpoints for a dbus connection
 pub enum ConnVariant<'a> {
     DeviceManager,
     Device(&'a str),
 }
 
+/// Provides a [dbus::blocking::Connection] to a callback
 pub fn with_conn<F, R>(variant: ConnVariant, action: F) -> Result<R, Error>
 where
     F: Fn(dbus::blocking::Proxy<'_, &dbus::blocking::Connection>) -> R,

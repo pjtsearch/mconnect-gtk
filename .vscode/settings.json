@@ -5,6 +5,7 @@
         "dbus",
         "hexpand",
         "relm",
+        "vexpand",
         "vgtk"
     ],
     "rust-analyzer.checkOnSave.command": "clippy"
