@@ -8,6 +8,7 @@ fn main() {
         .create(true)
         .open("src/views/App.css")
         .unwrap();
+    file.set_len(0).unwrap();
     file.write(
         compile_file("src/views/App.scss", Options::default())
             .unwrap()
